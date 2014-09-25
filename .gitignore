@@ -1,0 +1,9 @@
+bin
+.installed.cfg
+parts
+develop-eggs
+doc/_build
+.tox
+.coverage
+htmlcov
+
