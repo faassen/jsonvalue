@@ -24,7 +24,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'setuptools',
-        'pyld',
+        'PyLD >= 0.6.1',
     ],
     tests_require=tests_require,
     extras_require=dict(
