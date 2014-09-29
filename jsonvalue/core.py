@@ -2,16 +2,24 @@ from pyld import jsonld
 
 class JsonValue(object):
     def __init__(self):
-        self._converters = {}
+        self._dumpers = {}
+        self._loaders = {}
 
-    def register_converter(self, type, converter):
-        self._converters[type] = converter
+    def type(self, type, dump, load):
+        self._dumpers[type] = dump
+        self._loaders[type] = load
 
-    def convert(self, type, value):
-        converter = self._converters.get(type)
-        if converter is None:
+    def load(self, type, value):
+        load = self._loaders.get(type)
+        if load is None:
             return value
-        return converter(value)
+        return load(value)
+
+    def dump(self, type, value):
+        dump = self._dumpers.get(type)
+        if dump is None:
+            return value
+        return dump(value)
 
     def to_values(self, d):
         """Take JSON dict, return JSON dict with rich values.
@@ -20,44 +28,56 @@ class JsonValue(object):
         d = self.expand_to_values(d)
         return jsonld.compact(d, context)
 
+    def from_values(self, d):
+        """Take rich JSON dict, return plain JSON dict without rich values.
+        """
+
     def expand_to_values(self, d):
         """Take JSON dict, return expanded dict with rich values.
         """
         expanded = jsonld.expand(d)
-        result = []
-        for d in expanded:
-            result.append(self.obj_to_values(d))
-        return result
+        return _transform_expanded(expanded, self.load)
 
-    def obj_to_values(self, d):
-        result = {}
-        for key, l in d.items():
-            if not isinstance(l, list):
-                result[key] = l
-                continue
-            result[key] = self.list_to_values(l)
-        return result
-
-    def list_to_values(self, l):
-        result = []
-        for d in l:
-            if not isinstance(d, dict):
-                result.append(d)
-            result.append(self.to_value(d))
-        return result
-
-    def to_value(self, d):
-        type = d.get('@type')
-        if type is None:
-            return d
-        value = d.get('@value')
-        if value is None:
-            return d
-        d = d.copy()
-        d['@value'] = self.convert(type, value)
-        return d
-
-    def values2dict(self, d):
-        """Take a dict with rich values, return dict with JSON.
+    def compact_from_values(self, expanded, context):
+        """Take expanded JSON list, return JSON dict with plain values.
         """
+        expanded = _transform_expanded(expanded, self.dump)
+        return jsonld.compact(expanded, context)
 
+
+def _transform_expanded(expanded, transform):
+    result = []
+    for d in expanded:
+        result.append(_transform_dict(d, transform))
+    return result
+
+
+def _transform_dict(d, transform):
+    result = {}
+    for key, l in d.items():
+        if not isinstance(l, list):
+            result[key] = l
+            continue
+        result[key] = _transform_list(l, transform)
+    return result
+
+
+def _transform_list(l, transform):
+    result = []
+    for d in l:
+        if not isinstance(d, dict):
+            result.append(d)
+        result.append(_transform_value(d, transform))
+    return result
+
+
+def _transform_value(d, transform):
+    type = d.get('@type')
+    if type is None:
+        return d
+    value = d.get('@value')
+    if value is None:
+        return d
+    d = d.copy()
+    d['@value'] = transform(type, value)
+    return d
