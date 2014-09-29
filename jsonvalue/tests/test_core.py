@@ -1,9 +1,9 @@
 from pyld import jsonld
-from jsonvalue.core import TypeInfo
+from jsonvalue import JsonValue
 from datetime import datetime, date
 
 
-def test_dict2values_no_converters():
+def test_expand_to_values_no_converters():
     d = {
         '@context': {
             'foo': {
@@ -14,10 +14,10 @@ def test_dict2values_no_converters():
         'foo': '2010-01-01'
     }
 
-    info = TypeInfo()
-    assert info.dict2values(d) == jsonld.expand(d)
+    info = JsonValue()
+    assert info.expand_to_values(d) == jsonld.expand(d)
 
-def test_dict2values_converter():
+def test_expand_to_values_converter():
     d = {
         '@context': {
             'foo': {
@@ -28,13 +28,13 @@ def test_dict2values_converter():
         'foo': '2010-01-01'
     }
 
-    info = TypeInfo()
+    info = JsonValue()
     def parse_date(s):
         return datetime.strptime(s, '%Y-%m-%d').date()
 
     info.register_converter('http://example.com/date', parse_date)
 
-    assert info.dict2values(d) == [
+    assert info.expand_to_values(d) == [
         {
             u'http://example.com/foo':
             [{'@type': u'http://example.com/date',
@@ -43,7 +43,7 @@ def test_dict2values_converter():
     ]
 
 
-def test_objectify():
+def test_to_values():
     d = {
         '@context': {
             'foo': {
@@ -54,13 +54,13 @@ def test_objectify():
         'foo': '2010-01-01'
     }
 
-    info = TypeInfo()
+    info = JsonValue()
     def parse_date(s):
         return datetime.strptime(s, '%Y-%m-%d').date()
 
     info.register_converter('http://example.com/date', parse_date)
 
-    assert info.objectify(d) == {
+    assert info.to_values(d) == {
         '@context': {
             'foo': {
                 '@id': 'http://example.com/foo',

@@ -1,6 +1,6 @@
 from pyld import jsonld
 
-class TypeInfo(object):
+class JsonValue(object):
     def __init__(self):
         self._converters = {}
 
@@ -13,15 +13,15 @@ class TypeInfo(object):
             return value
         return converter(value)
 
-    def objectify(self, d):
-        """Take a dict with JSON, return dict with rich values.
+    def to_values(self, d):
+        """Take JSON dict, return JSON dict with rich values.
         """
         context = d['@context'] # XXX deal with context as URLs
-        d = self.dict2values(d)
+        d = self.expand_to_values(d)
         return jsonld.compact(d, context)
 
-    def dict2values(self, d):
-        """Take a dict with a JSON, return expanded dict with rich values.
+    def expand_to_values(self, d):
+        """Take JSON dict, return expanded dict with rich values.
         """
         expanded = jsonld.expand(d)
         result = []
