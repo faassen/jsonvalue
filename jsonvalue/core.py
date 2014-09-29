@@ -1,4 +1,5 @@
 from pyld import jsonld
+import json
 
 
 class JsonValue(object):
@@ -8,16 +9,20 @@ class JsonValue(object):
     def type(self, iri, cls):
         self._url_to_type[iri] = cls
 
-    def load_value(self, iri, value):
-        cls = self._url_to_type.get(iri)
+    def vocabulary(self, types):
+        for cls in types:
+            self.type(cls.id(), cls)
+
+    def load_value(self, id, value):
+        cls = self._url_to_type.get(id)
         if cls is None or value is None:
             return value
         if not cls.validate_load(value):
             raise ValueError("Cannot load as %s: %r" % (cls.id(), value))
         return cls.load(value)
 
-    def dump_value(self, iri, value):
-        cls = self._url_to_type.get(iri)
+    def dump_value(self, id, value):
+        cls = self._url_to_type.get(id)
         if cls is None or value is None:
             return value
         if not cls.validate_dump(value):
@@ -45,18 +50,45 @@ class JsonValue(object):
         return jsonld.compact(_transform_expanded(expanded, self.dump_value),
                               context)
 
+
     # JSON module style API
+    def _dump_prepare(self, obj, kw):
+        # XXX override original context rules?
+        has_context = '@context' in obj
+        context = kw.pop('context')
+        if context is not None:
+            obj['@context'] = context
+        result = self.from_values(obj)
+        if not has_context:
+            del result['@context']
+        return result
+
+    def _load_finalize(self, plain_obj, context):
+        has_context = '@context' in plain_obj
+        if context is not None:
+            plain_obj['@context'] = context
+        result = self.to_values(plain_obj)
+        if not has_context:
+            del result['@context']
+        return result
+
     def dump(self, obj, *args, **kw):
-        return json.dump(self.from_values(obj), *args, **kw)
+        plain_obj = self._dump_prepare(obj, kw)
+        return json.dump(plain_obj, *args, **kw)
 
     def dumps(self, obj, *args, **kw):
-        return json.dumps(self.from_values(obj), *args, **kw)
+        plain_obj = self._dump_prepare(obj, kw)
+        return json.dumps(plain_obj, *args, **kw)
 
     def load(self, *args, **kw):
-        return self.to_values(json.loads(*args, **kw))
+        context = kw.pop('context')
+        plain_obj = json.load(*args, **kw)
+        return self._load_finalize(plain_obj, context)
 
     def loads(self, *args, **kw):
-        return self.to_values(json.load(*args, **kw))
+        context = kw.pop('context')
+        plain_obj = json.loads(*args, **kw)
+        return self._load_finalize(plain_obj, context)
 
 def _transform_expanded(expanded, transform):
     result = []
@@ -94,3 +126,23 @@ def _transform_value(d, transform):
     d = d.copy()
     d['@value'] = transform(type, value)
     return d
+
+
+def types(d):
+    """Convenience way to specify context using type designators.
+    """
+    context = {}
+    for term, cls in d.items():
+        if isinstance(cls, type):
+            type_id = cls.id()
+        elif isinstance(cls, basestring):
+            type_id = cls
+        else:
+            assert False
+        # XXX can we use some better IRI for this?
+        id = 'http://jsonvalue.org/internal/%s' % term
+        context[term] = {
+            '@id': id,
+            '@type': type_id,
+        }
+    return context

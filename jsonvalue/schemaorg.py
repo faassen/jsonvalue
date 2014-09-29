@@ -1,7 +1,6 @@
 import isodate
 from datetime import datetime, date, time
 
-
 class SchemaOrgType(object):
     @classmethod
     def id(cls):
@@ -113,3 +112,7 @@ class Time(DataType):
     @staticmethod
     def validate_dump(value):
         return isinstance(value, time)
+
+
+DATA_TYPE_VOCABULARY = [DataType, Boolean, Number, Float, Integer, Text,
+                        URL, Date, DateTime, Time]

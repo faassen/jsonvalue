@@ -55,16 +55,20 @@ Now we tell our ``jv`` it understands basic data types (such as
 
 .. doctest::
 
-  >>> jv.vocab_data_type()
+  >>> from jsonvalue import schemaorg
+  >>> jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+These particular data types are defined on http://schema.org/DataType
 
 We can now serialize an object with rich date values:
 
 .. doctest::
 
   >>> from datetime import date
-  >>> from jsonvalue.datatype import DATE
+  >>> from jsonvalue import types
+  >>> from jsonvalue.schemaorg import Date
   >>> jv.dumps({u'my_date': date(2010, 1, 1)},
-  ...          types={'my_date': DATE))
+  ...          context=types({'my_date': Date}))
   '{"my_date": "2010-01-01"}'
 
 Note that we need to specify that ``my_date`` is actually a date in
@@ -75,8 +79,8 @@ We can also parse dates when we load JSON:
 
 .. doctest::
 
-  >>> jv.loads('{"my_date": "2010-01-01"}', types={'my_date': DATE})
-  {u'my_date": datetime.date(2010, 1, 1)}
+  >>> jv.loads('{"my_date": "2010-01-01"}', context=types({'my_date': Date}))
+  {u'my_date': datetime.date(2010, 1, 1)}
 
 We need to give it the same ``types`` specification as we gave it for
 ``dumps()``. If the ``my_date`` field in the JSON cannot be parsed as
@@ -140,9 +144,9 @@ We're ready to use it now:
 
 .. doctest::
 
-  >>> jv.dumps({u'user': User("faassen")}, types={'user': USER})
+  >>> jv.dumps({u'user': User("faassen")}, context=types({'user': USER}))
   '{"user": "@faassen"}'
-  >>> js.loads('{"user": "@faassen"}', types={'user': USER})
+  >>> js.loads('{"user": "@faassen"}', context=types({'user': USER}))
   {u'user': <User object at 0x...>}
 
 Preparing load and dump
