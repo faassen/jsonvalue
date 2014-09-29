@@ -1,5 +1,6 @@
 from pyld import jsonld
 
+
 class JsonValue(object):
     def __init__(self):
         self._dumpers = {}
@@ -9,13 +10,13 @@ class JsonValue(object):
         self._dumpers[type] = dump
         self._loaders[type] = load
 
-    def load(self, type, value):
+    def load_value(self, type, value):
         load = self._loaders.get(type)
         if load is None:
             return value
         return load(value)
 
-    def dump(self, type, value):
+    def dump_value(self, type, value):
         dump = self._dumpers.get(type)
         if dump is None:
             return value
@@ -34,12 +35,12 @@ class JsonValue(object):
     def expand_to_values(self, d):
         """Take JSON dict, return expanded dict with rich values.
         """
-        return _transform_expanded(jsonld.expand(d), self.load)
+        return _transform_expanded(jsonld.expand(d), self.load_value)
 
     def compact_from_values(self, expanded, context):
         """Take expanded JSON list, return JSON dict with plain values.
         """
-        return jsonld.compact(_transform_expanded(expanded, self.dump),
+        return jsonld.compact(_transform_expanded(expanded, self.dump_value),
                               context)
 
 
