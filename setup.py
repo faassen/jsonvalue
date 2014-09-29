@@ -25,6 +25,7 @@ setup(
     install_requires=[
         'setuptools',
         'PyLD >= 0.6.1',
+        'isodate >= 0.5.0',
     ],
     tests_require=tests_require,
     extras_require=dict(

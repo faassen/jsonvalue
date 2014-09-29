@@ -1,5 +1,6 @@
 from pyld import jsonld
 from jsonvalue import JsonValue
+from jsonvalue.schemaorg import Date
 from datetime import datetime, date
 
 
@@ -40,7 +41,7 @@ def test_expand_to_values_converter():
     info = JsonValue()
 
 
-    info.type('http://example.com/date', dump_date, load_date)
+    info.type('http://example.com/date', Date)
 
     expanded = info.expand_to_values(d)
 
@@ -70,7 +71,7 @@ def test_to_values():
     def parse_date(s):
         return datetime.strptime(s, '%Y-%m-%d').date()
 
-    info.type('http://example.com/date', dump_date, load_date)
+    info.type('http://example.com/date', Date)
 
     values = info.to_values(d)
     assert values == {

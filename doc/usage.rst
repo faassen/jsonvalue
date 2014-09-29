@@ -1,14 +1,23 @@
 Usage
 =====
 
+.. testsetup:: *
+
+  pass
+
+
+
 Introduction
 ------------
 
 Let's look at what we typically do with Python when handle JSON in Python.
 
 We can get ``JSON`` from some source and parse it using the standard
-library ``json`` module::
+library ``json`` module:
 
+.. doctest::
+
+  >>> import json
   >>> json.loads('{"foo": "bar"}')
   {u'foo': u'bar'}
 
@@ -16,7 +25,9 @@ library ``json`` module::
 dicts, lists, strings, numbers, booleans and ``None``.
 
 When we want to generate JSON, we need to create a data structure with
-the same restrictions, and then use ``json.dumps``::
+the same restrictions, and then use ``json.dumps``:
+
+.. doctest::
 
   >>> json.dumps({u'foo': u'bar'})
   '{"foo": "bar"}'
@@ -32,17 +43,23 @@ An example using dates
 Let's see how this works for date objects.
 
 First we create a JsonValue instance. This will help us parse and serialize
-JSON later::
+JSON later:
+
+.. doctest::
 
   >>> import jsonvalue
   >>> jv = jsonvalue.JsonValue()
 
 Now we tell our ``jv`` it understands basic data types (such as
-``Date``, ``DateTime``, ``Time``, ``URL`` and some others)::
+``Date``, ``DateTime``, ``Time``, ``URL`` and some others):
+
+.. doctest::
 
   >>> jv.vocab_data_type()
 
-We can now serialize an object with rich date values::
+We can now serialize an object with rich date values:
+
+.. doctest::
 
   >>> from datetime import date
   >>> from jsonvalue.datatype import DATE
@@ -54,7 +71,9 @@ Note that we need to specify that ``my_date`` is actually a date in
 the ``types`` argument to ``dumps``. It is an error if the ``my_date``
 field is not actually a Python date object (or ``None``).
 
-We can also parse dates when we load JSON::
+We can also parse dates when we load JSON:
+
+.. doctest::
 
   >>> jv.loads('{"my_date": "2010-01-01"}', types={'my_date': DATE})
   {u'my_date": datetime.date(2010, 1, 1)}
@@ -71,7 +90,9 @@ data type? Imagine we have a custom data type that represents a
 user. This username is represented in JSON ala Twitter using
 ``@username``.
 
-Our user object looks like this::
+Our user object looks like this:
+
+.. testcode::
 
   class User(object):
       def __init__(self, name):
@@ -80,12 +101,16 @@ Our user object looks like this::
 This is a very simple user object. We could plug in User objects that
 were looked up in a database or a User object with more fields.
 
-Now let's describe how we represent this user object as JSON::
+Now let's describe how we represent this user object as JSON:
+
+.. testcode::
 
   def dump_user(user):
       return '@' + user.name
 
-And how we load a user object from JSON::
+And how we load a user object from JSON:
+
+.. testcode::
 
   def load_user(o):
      if not o.startswith('@'):
@@ -98,16 +123,22 @@ Note that we refuse to load any username that does not start with a
 other things, like go into a database and check whether the user
 object exists.
 
-Now we define a custom data type identifier for a user::
+Now we define a custom data type identifier for a user:
+
+.. doctest::
 
   >>> USER = jsonvalue.Type('user')
 
-Now we create a ``JsonValue`` object that understands this type::
+Now we create a ``JsonValue`` object that understands this type:
+
+.. doctest::
 
   >>> jv = jsonvalue.JsonValue()
   >>> jv = jsonvalue.type(USER, dump_user, load_user)
 
-We're ready to use it now::
+We're ready to use it now:
+
+.. doctest::
 
   >>> jv.dumps({u'user': User("faassen")}, types={'user': USER})
   '{"user": "@faassen"}'
@@ -120,7 +151,7 @@ Preparing load and dump
 Sometimes you don't want to directly generate JSON but generate a
 Python representation of the JSON instead. This just materializes any
 rich values you have as JSON-compliant types instead. To do this you
-can use ``from_values``::
+can use ``from_values``:
 
   >>> jv.from_values()
 

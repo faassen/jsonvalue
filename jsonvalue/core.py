@@ -3,24 +3,26 @@ from pyld import jsonld
 
 class JsonValue(object):
     def __init__(self):
-        self._dumpers = {}
-        self._loaders = {}
+        self._url_to_type = {}
 
-    def type(self, type, dump, load):
-        self._dumpers[type] = dump
-        self._loaders[type] = load
+    def type(self, iri, cls):
+        self._url_to_type[iri] = cls
 
-    def load_value(self, type, value):
-        load = self._loaders.get(type)
-        if load is None:
+    def load_value(self, iri, value):
+        cls = self._url_to_type.get(iri)
+        if cls is None or value is None:
             return value
-        return load(value)
+        if not cls.validate_load(value):
+            raise ValueError("Cannot load as %s: %r" % (cls.id(), value))
+        return cls.load(value)
 
-    def dump_value(self, type, value):
-        dump = self._dumpers.get(type)
-        if dump is None:
+    def dump_value(self, iri, value):
+        cls = self._url_to_type.get(iri)
+        if cls is None or value is None:
             return value
-        return dump(value)
+        if not cls.validate_dump(value):
+            raise ValueError("Cannot dump as %s: %r" % (cls.id(), value))
+        return cls.dump(value)
 
     def to_values(self, d):
         """Take JSON dict, return JSON dict with rich values.
@@ -43,6 +45,18 @@ class JsonValue(object):
         return jsonld.compact(_transform_expanded(expanded, self.dump_value),
                               context)
 
+    # JSON module style API
+    def dump(self, obj, *args, **kw):
+        return json.dump(self.from_values(obj), *args, **kw)
+
+    def dumps(self, obj, *args, **kw):
+        return json.dumps(self.from_values(obj), *args, **kw)
+
+    def load(self, *args, **kw):
+        return self.to_values(json.loads(*args, **kw))
+
+    def loads(self, *args, **kw):
+        return self.to_values(json.load(*args, **kw))
 
 def _transform_expanded(expanded, transform):
     result = []
