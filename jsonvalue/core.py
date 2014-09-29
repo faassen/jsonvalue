@@ -24,25 +24,23 @@ class JsonValue(object):
     def to_values(self, d):
         """Take JSON dict, return JSON dict with rich values.
         """
-        context = d['@context'] # XXX deal with context as URLs
-        d = self.expand_to_values(d)
-        return jsonld.compact(d, context)
+        return jsonld.compact(self.expand_to_values(d), d['@context'])
 
     def from_values(self, d):
         """Take rich JSON dict, return plain JSON dict without rich values.
         """
+        return self.compact_from_values(jsonld.expand(d), d['@context'])
 
     def expand_to_values(self, d):
         """Take JSON dict, return expanded dict with rich values.
         """
-        expanded = jsonld.expand(d)
-        return _transform_expanded(expanded, self.load)
+        return _transform_expanded(jsonld.expand(d), self.load)
 
     def compact_from_values(self, expanded, context):
         """Take expanded JSON list, return JSON dict with plain values.
         """
-        expanded = _transform_expanded(expanded, self.dump)
-        return jsonld.compact(expanded, context)
+        return jsonld.compact(_transform_expanded(expanded, self.dump),
+                              context)
 
 
 def _transform_expanded(expanded, transform):

@@ -72,7 +72,8 @@ def test_to_values():
 
     info.type('http://example.com/date', dump_date, load_date)
 
-    assert info.to_values(d) == {
+    values = info.to_values(d)
+    assert values == {
         '@context': {
             'foo': {
                 '@id': 'http://example.com/foo',
@@ -81,3 +82,5 @@ def test_to_values():
         },
         'foo': date(2010, 1, 1)
     }
+
+    assert info.from_values(values) == d
