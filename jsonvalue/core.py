@@ -103,8 +103,8 @@ class CustomDataType(object):
         return isinstance(value, self.cls)
 
 
-def types(d):
-    """Convenience way to specify context using type designators.
+def datatypes(d):
+    """Convenience way to specify context using datatype designators.
     """
     context = {}
     for term, datatype in d.items():

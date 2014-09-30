@@ -65,10 +65,10 @@ We can now serialize an object with rich date values:
 .. doctest::
 
   >>> from datetime import date
-  >>> from jsonvalue import types
+  >>> from jsonvalue import datatypes
   >>> from jsonvalue.schemaorg import Date
   >>> jv.dumps({u'my_date': date(2010, 1, 1)},
-  ...          context=types({'my_date': Date}))
+  ...          context=datatypes({'my_date': Date}))
   '{"my_date": "2010-01-01"}'
 
 Note that we need to specify that ``my_date`` is actually a date in
@@ -79,7 +79,7 @@ We can also parse dates when we load JSON:
 
 .. doctest::
 
-  >>> jv.loads('{"my_date": "2010-01-01"}', context=types({'my_date': Date}))
+  >>> jv.loads('{"my_date": "2010-01-01"}', context=datatypes({'my_date': Date}))
   {u'my_date': datetime.date(2010, 1, 1)}
 
 We need to give it the same ``types`` specification as we gave it for
@@ -145,9 +145,9 @@ Then we can use it for dumping and loading JSON::
 
 .. doctest::
 
-  >>> jv.dumps({u'user': User("faassen")}, context=types({'user': user_datatype}))
+  >>> jv.dumps({u'user': User("faassen")}, context=datatypes({'user': user_datatype}))
   '{"user": "@faassen"}'
-  >>> jv.loads('{"user": "@faassen"}', context=types({'user': user_datatype}))
+  >>> jv.loads('{"user": "@faassen"}', context=datatypes({'user': user_datatype}))
   {u'user': <User object at 0x...>}
 
 Preparing load and dump

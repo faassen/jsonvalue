@@ -1,5 +1,5 @@
 from pyld import jsonld
-from jsonvalue import JsonValue, types
+from jsonvalue import JsonValue, datatypes, CustomDataType
 from jsonvalue import schemaorg
 from datetime import datetime, date, time
 import pytest
@@ -77,7 +77,7 @@ def test_to_values():
     assert info.from_values(values) == d
 
 
-SCHEMA_ORG_DATA_TYPES_CONTEXT = types(dict(
+SCHEMA_ORG_DATA_TYPES_CONTEXT = datatypes(dict(
     a=schemaorg.Boolean,
     b=schemaorg.Number,
     c=schemaorg.Float,
@@ -398,3 +398,67 @@ def test_schema_org_data_type_load_time_wrong():
         jv.to_values(
             dict(i='25:10:17'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_expand_nested():
+    print jsonld.expand({
+        '@context': {
+            'name': {'@id': 'http://example.com/name',
+                     '@type': 'http://example.com/nametype' },
+            'email': 'http://example.com/email',
+            'user': {'@id': 'http://example.com/user'},
+        },
+        'user': {'@type': 'http://example.com/usertype',
+                 'name':'foo', 'email': 'foo@example.com'}
+    })
+
+# def test_sub_object_to_values():
+#     jv = JsonValue()
+
+#     class User(object):
+#         def __init__(self, name, email):
+#             self.name = name
+#             self.email = email
+
+#     def dump_user(user):
+#         return { 'name': user.name,
+#                  'email': user.email }
+
+#     def load_user(d):
+#         return User(d['name'], d['email'])
+
+#     user_data_type = CustomDataType(User, dump_user, load_user)
+#     jv.type(user_data_type.id(), user_data_type)
+
+#     values = jv.to_values(
+#         dict(user=dict(name='foo', email='foo@example.com')),
+#         context=datatypes(dict(user=user_data_type)))
+#     import pdb; pdb.set_trace()
+
+# def test_sub_object():
+#     jv = JsonValue()
+
+#     class User(object):
+#         def __init__(self, name, email):
+#             self.name = name
+#             self.email = email
+
+#     def dump_user(user):
+#         return { 'name': user.name,
+#                  'email': user.email }
+
+#     def load_user(d):
+#         return User(d['name'], d['email'])
+
+#     user_data_type = CustomDataType(User, dump_user, load_user)
+#     jv.type(user_data_type.id(), user_data_type)
+
+#     values = jv.from_values(
+#         dict(user=User('foo', 'foo@example.com')),
+#              context=datatypes(dict(user=user_data_type)))
+#     assert values == {
+#         'user': {
+#             'name': 'foo',
+#             'email': 'foo@example.com'
+#         }
+#     }
