@@ -19,7 +19,7 @@ class SchemaOrgType(object):
         return value
 
     @staticmethod
-    def dump(self, value):
+    def dump(value):
         return value
 
 class DataType(SchemaOrgType):

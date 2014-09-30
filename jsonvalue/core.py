@@ -29,20 +29,36 @@ class JsonValue(object):
             raise ValueError("Cannot dump as %s: %r" % (data_type.id(), value))
         return data_type.dump(value)
 
-    def to_values(self, d):
+    def to_values(self, d, context=None):
         """Take JSON dict, return JSON dict with rich values.
         """
-        return jsonld.compact(self.expand_to_values(d), d['@context'])
+        original_context = d.get('@context')
+        if context is None:
+            context = original_context
+        result = jsonld.compact(self.expand_to_values(d, context), context)
+        if original_context is None:
+            del result['@context']
+        return result
 
-    def from_values(self, d):
+    def from_values(self, d, context=None):
         """Take rich JSON dict, return plain JSON dict without rich values.
         """
-        return self.compact_from_values(jsonld.expand(d), d['@context'])
+        original_context = d.get('@context')
+        if context is None:
+            context = original_context
+        result = self.compact_from_values(
+            jsonld.expand(d, dict(expandContext=context)),
+            context)
+        if original_context is None:
+            del result['@context']
+        return result
 
-    def expand_to_values(self, d):
+    def expand_to_values(self, d, context):
         """Take JSON dict, return expanded dict with rich values.
         """
-        return _transform_expanded(jsonld.expand(d), self.load_value)
+        return _transform_expanded(
+            jsonld.expand(d,dict(expandContext=context)),
+            self.load_value)
 
     def compact_from_values(self, expanded, context):
         """Take expanded JSON list, return JSON dict with plain values.
@@ -52,43 +68,23 @@ class JsonValue(object):
 
 
     # JSON module style API
-    def _dump_prepare(self, obj, kw):
-        # XXX override original context rules?
-        has_context = '@context' in obj
-        context = kw.pop('context')
-        if context is not None:
-            obj['@context'] = context
-        result = self.from_values(obj)
-        if not has_context:
-            del result['@context']
-        return result
-
-    def _load_finalize(self, plain_obj, context):
-        has_context = '@context' in plain_obj
-        if context is not None:
-            plain_obj['@context'] = context
-        result = self.to_values(plain_obj)
-        if not has_context:
-            del result['@context']
-        return result
-
     def dump(self, obj, *args, **kw):
-        plain_obj = self._dump_prepare(obj, kw)
-        return json.dump(plain_obj, *args, **kw)
+        return json.dump(self.from_values(obj, kw.pop('context', None)),
+                         *args, **kw)
 
     def dumps(self, obj, *args, **kw):
-        plain_obj = self._dump_prepare(obj, kw)
-        return json.dumps(plain_obj, *args, **kw)
+        return json.dumps(self.from_values(obj, kw.pop('context', None)),
+                          *args, **kw)
 
     def load(self, *args, **kw):
-        context = kw.pop('context')
-        plain_obj = json.load(*args, **kw)
-        return self._load_finalize(plain_obj, context)
+        context = kw.pop('context', None)
+        plain = json.load(*args, **kw)
+        return self.to_values(plain, context)
 
     def loads(self, *args, **kw):
-        context = kw.pop('context')
-        plain_obj = json.loads(*args, **kw)
-        return self._load_finalize(plain_obj, context)
+        context = kw.pop('context', None)
+        plain = json.loads(*args, **kw)
+        return self.to_values(plain, context)
 
 
 class CustomDataType(object):
