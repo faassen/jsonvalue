@@ -102,8 +102,9 @@ Our user object looks like this:
       def __init__(self, name):
           self.name = name
 
-This is a very simple user object. We could plug in User objects that
-were looked up in a database or a User object with more fields.
+This is a very simple user object. In a real program we could plug in
+``User`` objects that were looked up in a database. The ``User``
+object could also have more fields.
 
 Now let's describe how we represent this user object as JSON:
 
@@ -118,35 +119,35 @@ And how we load a user object from JSON:
 
   def load_user(o):
      if not o.startswith('@'):
-         raise jsonvalue.LoadError(
+         raise ValueError(
              "User representation did not start with @: %s" % o)
      return User(o[1:])
 
 Note that we refuse to load any username that does not start with a
-``@`` and raise a ``LoadError`` if we see one. ``load_user`` could do
-other things, like go into a database and check whether the user
-object exists.
+``@`` and raise a ``ValueError`` if we see one. In a real program
+``load_user`` could do other things, like query the database to get a
+``User`` object.
 
-Now we define a custom data type identifier for a user:
+We can specify the custom data type::
 
 .. doctest::
 
-  >>> USER = jsonvalue.Type('user')
+  >>> user_datatype = jsonvalue.CustomDataType(User, dump_user, load_user)
 
-Now we create a ``JsonValue`` object that understands this type:
+We create a ``JsonValue`` object that understands this type:
 
 .. doctest::
 
   >>> jv = jsonvalue.JsonValue()
-  >>> jv = jsonvalue.type(USER, dump_user, load_user)
+  >>> jv.type(user_datatype.id(), user_datatype)
 
-We're ready to use it now:
+Then we can use it for dumping and loading JSON::
 
 .. doctest::
 
-  >>> jv.dumps({u'user': User("faassen")}, context=types({'user': USER}))
+  >>> jv.dumps({u'user': User("faassen")}, context=types({'user': user_datatype}))
   '{"user": "@faassen"}'
-  >>> js.loads('{"user": "@faassen"}', context=types({'user': USER}))
+  >>> jv.loads('{"user": "@faassen"}', context=types({'user': user_datatype}))
   {u'user': <User object at 0x...>}
 
 Preparing load and dump
@@ -157,12 +158,12 @@ Python representation of the JSON instead. This just materializes any
 rich values you have as JSON-compliant types instead. To do this you
 can use ``from_values``:
 
-  >>> jv.from_values()
+  >> jv.from_values()
 
 You can also take such a materialized JSON-compliant structure and
 turn it into rich values again::
 
-  >>> jv.to_values()
+  >> jv.to_values()
 
 JSON-LD under the hood
 ----------------------
@@ -173,13 +174,13 @@ mechanism. With the ``generate_context`` argument for the ``dumps``
 function you can make sure such a context is generated and embedded
 from the types argument::
 
-  >>> jv.dumps(..., generate_context=True)
+  >> jv.dumps(..., generate_context=True)
   ...
 
 Since the context is now embedded, this means that you don't need to
 give the types information to ``loads`` explicitly::
 
-  >>> js.loads(...)
+  >> js.loads(...)
 
 You can always still supply ``types`` explicitly, and it will use this
 instead of the context.

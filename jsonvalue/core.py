@@ -14,20 +14,20 @@ class JsonValue(object):
             self.type(cls.id(), cls)
 
     def load_value(self, id, value):
-        cls = self._url_to_type.get(id)
-        if cls is None or value is None:
+        data_type = self._url_to_type.get(id)
+        if data_type is None or value is None:
             return value
-        if not cls.validate_load(value):
-            raise ValueError("Cannot load as %s: %r" % (cls.id(), value))
-        return cls.load(value)
+        if not data_type.validate_load(value):
+            raise ValueError("Cannot load as %s: %r" % (data_type.id(), value))
+        return data_type.load(value)
 
     def dump_value(self, id, value):
-        cls = self._url_to_type.get(id)
-        if cls is None or value is None:
+        data_type = self._url_to_type.get(id)
+        if data_type is None or value is None:
             return value
-        if not cls.validate_dump(value):
-            raise ValueError("Cannot dump as %s: %r" % (cls.id(), value))
-        return cls.dump(value)
+        if not data_type.validate_dump(value):
+            raise ValueError("Cannot dump as %s: %r" % (data_type.id(), value))
+        return data_type.dump(value)
 
     def to_values(self, d):
         """Take JSON dict, return JSON dict with rich values.
@@ -90,6 +90,41 @@ class JsonValue(object):
         plain_obj = json.loads(*args, **kw)
         return self._load_finalize(plain_obj, context)
 
+
+class CustomDataType(object):
+    def __init__(self, cls, dump, load):
+        self.cls = cls
+        self.dump = dump
+        self.load = load
+
+    def id(self):
+        return 'http://jsonvalue.org/internal/type/%s' % self.cls.__name__
+
+    def validate_load(self, value):
+        return True
+
+    def validate_dump(self, value):
+        return isinstance(value, self.cls)
+
+
+def types(d):
+    """Convenience way to specify context using type designators.
+    """
+    context = {}
+    for term, datatype in d.items():
+        if isinstance(datatype, basestring):
+            type_id = datatype
+        else:
+            type_id = datatype.id()
+        # XXX can we use some better IRI for this?
+        id = 'http://jsonvalue.org/internal/id/%s' % term
+        context[term] = {
+            '@id': id,
+            '@type': type_id,
+        }
+    return context
+
+
 def _transform_expanded(expanded, transform):
     result = []
     for d in expanded:
@@ -126,23 +161,3 @@ def _transform_value(d, transform):
     d = d.copy()
     d['@value'] = transform(type, value)
     return d
-
-
-def types(d):
-    """Convenience way to specify context using type designators.
-    """
-    context = {}
-    for term, cls in d.items():
-        if isinstance(cls, type):
-            type_id = cls.id()
-        elif isinstance(cls, basestring):
-            type_id = cls
-        else:
-            assert False
-        # XXX can we use some better IRI for this?
-        id = 'http://jsonvalue.org/internal/%s' % term
-        context[term] = {
-            '@id': id,
-            '@type': type_id,
-        }
-    return context
