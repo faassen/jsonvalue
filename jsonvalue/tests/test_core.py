@@ -192,7 +192,7 @@ def test_schema_org_none_to_values():
     assert values == {}
 
 
-def test_schema_org_data_type_boolean_wrong():
+def test_schema_org_data_type_dump_boolean_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -203,7 +203,7 @@ def test_schema_org_data_type_boolean_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_number_wrong():
+def test_schema_org_data_type_dump_number_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -214,7 +214,7 @@ def test_schema_org_data_type_number_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_float_wrong():
+def test_schema_org_data_type_dump_float_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -225,7 +225,7 @@ def test_schema_org_data_type_float_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_integer_wrong():
+def test_schema_org_data_type_dump_integer_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -241,7 +241,7 @@ def test_schema_org_data_type_integer_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_text_wrong():
+def test_schema_org_data_type_dump_text_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -252,7 +252,7 @@ def test_schema_org_data_type_text_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_url_wrong():
+def test_schema_org_data_type_dump_url_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -263,7 +263,7 @@ def test_schema_org_data_type_url_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_date_wrong():
+def test_schema_org_data_type_dump_date_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -274,7 +274,7 @@ def test_schema_org_data_type_date_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_datetime_wrong():
+def test_schema_org_data_type_dump_datetime_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -285,7 +285,7 @@ def test_schema_org_data_type_datetime_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_schema_org_data_type_time_wrong():
+def test_schema_org_data_type_dump_time_wrong():
     jv = JsonValue()
 
     jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
@@ -293,4 +293,108 @@ def test_schema_org_data_type_time_wrong():
     with pytest.raises(ValueError):
         jv.from_values(
             dict(i=date(2010, 1, 1)),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_boolean_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(a='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_number_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(b='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_float_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(c='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_integer_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(d='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(d=1.1),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_text_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(e=1),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_url_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(f=1),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_date_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(g='2011-14-01'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_datetime_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(h='2011-12-01T00:64:17'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+
+def test_schema_org_data_type_load_time_wrong():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(ValueError):
+        jv.to_values(
+            dict(i='25:10:17'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
