@@ -41,7 +41,7 @@ class Number(DataType):
 
 class Float(Number):
     @staticmethod
-    def load(self, value):
+    def load(value):
         return float(value)
 
 class Integer(Number):
@@ -77,7 +77,9 @@ class Date(DataType):
 
     @staticmethod
     def validate_dump(value):
-        return isinstance(value, date)
+        # we have to specify we do not accept datetimes as dates here
+        # better fail early in that case
+        return isinstance(value, date) and not isinstance(value, datetime)
 
 class DateTime(DataType):
     @staticmethod
