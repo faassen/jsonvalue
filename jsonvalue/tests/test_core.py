@@ -150,6 +150,53 @@ def test_schema_org_data_type_vocabulary_to_values():
     )
 
 
+def test_schema_org_data_type_vocabulary_to_values_nested():
+    jv = JsonValue()
+
+    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    context = {
+        "a": {
+            '@id': 'http://example.com/a',
+            '@type': schemaorg.Integer.id()
+        },
+        "b": {
+            '@id': 'http://example.com/b',
+            '@type': schemaorg.Date.id()
+        },
+        "sub": 'http://example.com/sub'
+    }
+
+    values = jv.to_values({
+        'a': 3,
+        'sub': {
+            'b': '2011-01-01'
+        }
+    }, context=context)
+
+    assert values == {
+        'a': 3,
+        'sub': {
+            'b': date(2011, 1, 1)
+        }
+    }
+
+    values = jv.to_values({
+        'a': 3,
+        'sub': {
+            '@type': 'http://example.com/nanah/type',
+            'b': '2011-01-01'
+        }
+    }, context=context)
+
+    assert values == {
+        'a': 3,
+        'sub': {
+            '@type': 'http://example.com/nanah/type',
+            'b': date(2011, 1, 1)
+        }
+    }
+
 def test_schema_org_none_from_values():
     jv = JsonValue()
 

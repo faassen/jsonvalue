@@ -177,6 +177,7 @@ def _transform_list(l, transform):
     for d in l:
         if not isinstance(d, dict):
             result.append(d)
+            continue
         result.append(_transform_value(d, transform))
     return result
 
@@ -184,10 +185,10 @@ def _transform_list(l, transform):
 def _transform_value(d, transform):
     type = d.get('@type')
     if type is None:
-        return d
+        return _transform_dict(d, transform)
     value = d.get('@value')
     if value is None:
-        return d
+        return _transform_dict(d, transform)
     d = d.copy()
     d['@value'] = transform(type, value)
     return d
