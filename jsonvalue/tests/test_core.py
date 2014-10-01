@@ -541,30 +541,116 @@ def test_node_to_value():
     assert values['user'].name == 'foo'
     assert values['user'].email == 'foo@example.com'
 
-# def test_sub_object():
-#     jv = JsonValue()
+def test_outer_node_to_value():
+    jv = JsonValue()
 
-#     class User(object):
-#         def __init__(self, name, email):
-#             self.name = name
-#             self.email = email
+    class User(object):
+        def __init__(self, name, email):
+            self.name = name
+            self.email = email
 
-#     def dump_user(user):
-#         return { 'name': user.name,
-#                  'email': user.email }
+    def dump_user(user):
+        return { 'name': user.name,
+                 'email': user.email }
 
-#     def load_user(d):
-#         return User(d['name'], d['email'])
+    def load_user(d):
+        return User(d['name'], d['email'])
 
-#     user_data_type = CustomDataType(User, dump_user, load_user)
-#     jv.type(user_data_type.id(), user_data_type)
+    user_node_type = CustomNodeType(User, dump_user, load_user)
 
-#     values = jv.from_values(
-#         dict(user=User('foo', 'foo@example.com')),
-#              context=datatypes(dict(user=user_data_type)))
-#     assert values == {
-#         'user': {
-#             'name': 'foo',
-#             'email': 'foo@example.com'
-#         }
-#     }
+    jv.type(user_node_type.id(), user_node_type)
+
+    context = {
+        'name': {
+            '@id': 'http://example.com/name',
+            '@type': schemaorg.Text.id(),
+        },
+        'email': {
+            '@id': 'http://example.com/email',
+            '@type': schemaorg.Text.id(),
+        }
+    }
+
+    values = jv.to_values({
+        '@type': user_node_type.id(),
+        'name': 'foo',
+        'email': 'foo@example.com'
+    },
+    context=context)
+
+    assert isinstance(values, User)
+    assert values.name == 'foo'
+    assert values.email == 'foo@example.com'
+
+
+def test_nested_node_values():
+    jv = JsonValue()
+
+    class Users(object):
+        def __init__(self, users):
+            self.users = users
+
+    def dump_users(users):
+        return { 'users': users.users }
+
+    def load_users(d):
+        return Users(d['users'])
+
+    users_node_type = CustomNodeType(Users, dump_users, load_users)
+
+    class User(object):
+        def __init__(self, name, email):
+            self.name = name
+            self.email = email
+
+    def dump_user(user):
+        return { 'name': user.name,
+                 'email': user.email }
+
+    def load_user(d):
+        return User(d['name'], d['email'])
+
+    user_node_type = CustomNodeType(User, dump_user, load_user)
+
+    jv.type(users_node_type.id(), users_node_type)
+    jv.type(user_node_type.id(), user_node_type)
+
+    context = {
+        'name': {
+            '@id': 'http://example.com/name',
+            '@type': schemaorg.Text.id(),
+        },
+        'email': {
+            '@id': 'http://example.com/email',
+            '@type': schemaorg.Text.id(),
+        },
+        'users': 'http://example.com/users'
+    }
+
+    values = jv.to_values({
+        '@type': users_node_type.id(),
+        'users': [
+            {
+                '@type': user_node_type.id(),
+                'name': 'foo',
+                'email': 'foo@example.com',
+            },
+            {
+                '@type': user_node_type.id(),
+                'name': 'bar',
+                'email': 'bar@example.com',
+            },
+        ]
+    },
+    context=context)
+
+    assert isinstance(values, Users)
+    assert len(values.users) == 2
+    user1 = values.users[0]
+    user2 = values.users[1]
+
+    assert user1.name == 'foo'
+    assert user1.email == 'foo@example.com'
+
+    assert user2.name == 'bar'
+    assert user2.email == 'bar@example.com'

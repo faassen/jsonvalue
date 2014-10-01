@@ -37,10 +37,13 @@ class JsonValue(object):
         original_context = d.get('@context')
         if context is None:
             context = original_context
-        expanded = self.expand_to_values(d, context)
-        result = Objectifier(self.load_value, context)(expanded)
-        if isinstance(result, dict) and original_context is None:
-            del result['@context']
+        wrapped = { 'http://jsonvalue.org/main': d,
+                    '@context': context }
+        expanded = self.expand_to_values(wrapped, context)
+        wrapped_objects = Objectifier(self.load_value, context)(expanded)
+        result = wrapped_objects['http://jsonvalue.org/main']
+        if isinstance(result, dict) and original_context is not None:
+            result['@context'] = original_context
         return result
 
     def from_values(self, d, context=None):
