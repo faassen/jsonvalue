@@ -6,28 +6,30 @@ class JsonValue(object):
     def __init__(self):
         self._url_to_type = {}
 
-    def type(self, iri, cls):
-        self._url_to_type[iri] = cls
+    def type(self, iri, type):
+        self._url_to_type[iri] = type
 
     def vocabulary(self, types):
-        for cls in types:
-            self.type(cls.id(), cls)
+        for type in types:
+            self.type(type.id(), type)
 
     def load_value(self, id, value):
-        data_type = self._url_to_type.get(id)
-        if data_type is None or value is None:
+        type = self._url_to_type.get(id)
+        if type is None or value is None:
             return value
-        if not data_type.validate_load(value):
-            raise ValueError("Cannot load as %s: %r" % (data_type.id(), value))
-        return data_type.load(value)
+        if not type.validate_load(value):
+            raise ValueError("Cannot load as %s: %r" %
+                             (type.id(), value))
+        return type.load(value)
 
     def dump_value(self, id, value):
-        data_type = self._url_to_type.get(id)
-        if data_type is None or value is None:
+        type = self._url_to_type.get(id)
+        if type is None or value is None:
             return value
-        if not data_type.validate_dump(value):
-            raise ValueError("Cannot dump as %s: %r" % (data_type.id(), value))
-        return data_type.dump(value)
+        if not type.validate_dump(value):
+            raise ValueError("Cannot dump as %s: %r" %
+                             (type.id(), value))
+        return type.dump(value)
 
     def to_values(self, d, context=None):
         """Take JSON dict, return JSON dict with rich values.
@@ -35,7 +37,9 @@ class JsonValue(object):
         original_context = d.get('@context')
         if context is None:
             context = original_context
-        result = jsonld.compact(self.expand_to_values(d, context), context)
+        expanded = self.expand_to_values(d, context)
+#        objectified = self.objectify(expanded, context)
+        result = jsonld.compact(expanded, context)
         if original_context is None:
             del result['@context']
         return result
@@ -53,6 +57,17 @@ class JsonValue(object):
             del result['@context']
         return result
 
+    # def objectify(self, l, context):
+        
+    #     # XXX need to use context to expand type
+    #     type = d.get('@type')
+    #     # XXX type being array
+    #     if type is not None:
+    #         return self.load_value(d)
+    #     result = {}
+        
+    #     for key, value in d.items():
+    #         if 
     def expand_to_values(self, d, context):
         """Take JSON dict, return expanded dict with rich values.
         """
@@ -94,10 +109,29 @@ class CustomDataType(object):
         self.load = load
 
     def id(self):
-        return 'http://jsonvalue.org/internal/type/%s' % self.cls.__name__
+        return 'http://jsonvalue.org/internal/datatype/%s' % self.cls.__name__
 
     def validate_load(self, value):
         return True
+
+    def validate_dump(self, value):
+        return isinstance(value, self.cls)
+
+
+class CustomNodeType(object):
+    def __init__(self, cls, dump, load):
+        self.cls = cls
+        self.dump = dump
+        self.load = load
+
+    def id(self):
+        return 'http://jsonvalue.org/internal/nodetype/%s' % self.cls.__name__
+
+    def validate_load(self, value):
+        if not isinstance(value, dict):
+            return False
+        type = value.get('@type')
+        return type == self.id()
 
     def validate_dump(self, value):
         return isinstance(value, self.cls)
@@ -148,6 +182,44 @@ def _transform_list(l, transform):
 
 
 def _transform_value(d, transform):
+    type = d.get('@type')
+    if type is None:
+        return d
+    value = d.get('@value')
+    if value is None:
+        return d
+    d = d.copy()
+    d['@value'] = transform(type, value)
+    return d
+
+
+def _objectify_expanded(expanded, transform):
+    result = []
+    for d in expanded:
+        result.append(_objectify_dict(d, transform))
+    return result
+
+
+def _objectify_dict(d, transform):
+    result = {}
+    for key, l in d.items():
+        if not isinstance(l, list):
+            result[key] = l
+            continue
+        result[key] = _objectify_list(l, transform)
+    return result
+
+
+def _objectify_list(l, transform):
+    result = []
+    for d in l:
+        if not isinstance(d, dict):
+            result.append(d)
+        result.append(_objectify_value(d, transform))
+    return result
+
+
+def _objectify_value(d, transform):
     type = d.get('@type')
     if type is None:
         return d

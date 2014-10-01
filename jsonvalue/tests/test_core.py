@@ -1,5 +1,5 @@
 from pyld import jsonld
-from jsonvalue import JsonValue, datatypes, CustomDataType
+from jsonvalue import JsonValue, datatypes, CustomDataType, CustomNodeType
 from jsonvalue import schemaorg
 from datetime import datetime, date, time
 import pytest
@@ -400,40 +400,57 @@ def test_schema_org_data_type_load_time_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_expand_nested():
-    print jsonld.expand({
-        '@context': {
-            'name': {'@id': 'http://example.com/name',
-                     '@type': 'http://example.com/nametype' },
-            'email': 'http://example.com/email',
-            'user': {'@id': 'http://example.com/user'},
+@pytest.mark.xfail
+def test_node_to_value():
+    jv = JsonValue()
+
+    class User(object):
+        def __init__(self, name, email):
+            self.name = name
+            self.email = email
+
+    def dump_user(user):
+        return { 'name': user.name,
+                 'email': user.email }
+
+    def load_user(d):
+        return User(d['name'], d['email'])
+
+    user_node_type = CustomNodeType(User, dump_user, load_user)
+
+    jv.type(user_node_type.id(), user_node_type)
+
+    context = {
+        'name': {
+            '@id': 'http://example.com/name',
+            '@type': schemaorg.Text.id(),
         },
-        'user': {'@type': 'http://example.com/usertype',
-                 'name':'foo', 'email': 'foo@example.com'}
-    })
+        'email': {
+            '@id': 'http://example.com/email',
+            '@type': schemaorg.Text.id(),
+        },
+        'user': 'http://example.com/user',
+    }
 
-# def test_sub_object_to_values():
-#     jv = JsonValue()
+    print jsonld.expand({
+        'user': {
+            '@type': user_node_type.id(),
+            'name': 'foo',
+            'email': 'foo@example.com'
+        }
+    },
+    dict(expandContext=context))
 
-#     class User(object):
-#         def __init__(self, name, email):
-#             self.name = name
-#             self.email = email
+    values = jv.to_values({
+        'user': {
+            '@type': user_node_type.id(),
+            'name': 'foo',
+            'email': 'foo@example.com'
+        }
+    },
+    context=context)
 
-#     def dump_user(user):
-#         return { 'name': user.name,
-#                  'email': user.email }
-
-#     def load_user(d):
-#         return User(d['name'], d['email'])
-
-#     user_data_type = CustomDataType(User, dump_user, load_user)
-#     jv.type(user_data_type.id(), user_data_type)
-
-#     values = jv.to_values(
-#         dict(user=dict(name='foo', email='foo@example.com')),
-#         context=datatypes(dict(user=user_data_type)))
-#     import pdb; pdb.set_trace()
+    assert values == {}
 
 # def test_sub_object():
 #     jv = JsonValue()
