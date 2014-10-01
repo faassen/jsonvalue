@@ -38,9 +38,8 @@ class JsonValue(object):
         if context is None:
             context = original_context
         expanded = self.expand_to_values(d, context)
-#        objectified = self.objectify(expanded, context)
-        result = jsonld.compact(expanded, context)
-        if original_context is None:
+        result = Objectifier(self.load_value, context)(expanded)
+        if isinstance(result, dict) and original_context is None:
             del result['@context']
         return result
 
@@ -57,17 +56,6 @@ class JsonValue(object):
             del result['@context']
         return result
 
-    # def objectify(self, l, context):
-        
-    #     # XXX need to use context to expand type
-    #     type = d.get('@type')
-    #     # XXX type being array
-    #     if type is not None:
-    #         return self.load_value(d)
-    #     result = {}
-        
-    #     for key, value in d.items():
-    #         if 
     def expand_to_values(self, d, context):
         """Take JSON dict, return expanded dict with rich values.
         """
@@ -194,39 +182,85 @@ def _transform_value(d, transform):
     return d
 
 
-def _objectify_expanded(expanded, transform):
-    result = []
-    for d in expanded:
-        result.append(_objectify_dict(d, transform))
-    return result
+class Objectifier(object):
+    def __init__(self, transform, context):
+        self.transform = transform
+        self.context = context
 
+    def __call__(self, expanded):
+        objects = {}
+        objectified = self._list(expanded, objects)
+        compacted = jsonld.compact(objectified, self.context)
+        return self.realize(compacted, objects)
 
-def _objectify_dict(d, transform):
-    result = {}
-    for key, l in d.items():
-        if not isinstance(l, list):
-            result[key] = l
-            continue
-        result[key] = _objectify_list(l, transform)
-    return result
+    def realize(self, o, objects):
+        if isinstance(o, dict):
+            return self._realize_dict(o, objects)
+        elif isinstance(o, list):
+            return self._realize_list(o, objects)
+        else:
+            return o
 
+    def _realize_dict(self, d, objects):
+        type = d.get('@type')
+        if type == 'http://jsonvalue.org/object_type':
+            value = d.get('@value')
+            return objects[value]
+        result = {}
+        for key, value in d.items():
+            result[key] = self.realize(value, objects)
+        return result
 
-def _objectify_list(l, transform):
-    result = []
-    for d in l:
-        if not isinstance(d, dict):
-            result.append(d)
-        result.append(_objectify_value(d, transform))
-    return result
+    def _realize_list(self, l, objects):
+        return [self.realize(value, objects) for value in l]
 
+    def _expanded(self, expanded, objects):
+        result = []
+        for d in expanded:
+            result.append(self._dict(d, objects))
+        return result
 
-def _objectify_value(d, transform):
-    type = d.get('@type')
-    if type is None:
-        return d
-    value = d.get('@value')
-    if value is None:
-        return d
-    d = d.copy()
-    d['@value'] = transform(type, value)
-    return d
+    def _dict(self, d, objects):
+        result = {}
+        for key, l in d.items():
+            if not isinstance(l, list):
+                result[key] = l
+                continue
+            result[key] = self._list(l, objects)
+        return result
+
+    def _list(self, l, objects):
+        result = []
+        for d in l:
+            if not isinstance(d, dict):
+                result.append(d)
+                continue
+            result.append(self._value(d, objects))
+        return result
+
+    def _value(self, d, objects):
+        d = self._dict(d, objects)
+        type = d.get('@type')
+        if type is None:
+            return d
+        # XXX what if there are more than one types?
+        type = type[0]
+        value = d.get('@value')
+        if value is not None:
+            return d
+        # XXX would be nice to be able to avoid compaction if
+        # type isn't recognized anyway. either move this logic
+        # into transform somehow (but how to get context and objects?)
+        # or extend transformation api with can_transform
+        compacted = jsonld.compact(d, self.context)
+        del compacted['@context']
+        compacted = self.realize(compacted, objects)
+        obj = self.transform(type, compacted)
+        if obj is None:
+            return d
+        new_id = 'http://jsonvalue.org/object/%s' % len(objects)
+        objects[new_id] = obj
+        return {
+            '@type': 'http://jsonvalue.org/object_type',
+            '@value': new_id,
+        }

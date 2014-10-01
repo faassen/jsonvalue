@@ -496,7 +496,6 @@ def test_schema_org_data_type_load_time_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-@pytest.mark.xfail
 def test_node_to_value():
     jv = JsonValue()
 
@@ -528,15 +527,6 @@ def test_node_to_value():
         'user': 'http://example.com/user',
     }
 
-    print jsonld.expand({
-        'user': {
-            '@type': user_node_type.id(),
-            'name': 'foo',
-            'email': 'foo@example.com'
-        }
-    },
-    dict(expandContext=context))
-
     values = jv.to_values({
         'user': {
             '@type': user_node_type.id(),
@@ -546,7 +536,10 @@ def test_node_to_value():
     },
     context=context)
 
-    assert values == {}
+    assert len(values) == 1
+    assert isinstance(values['user'], User)
+    assert values['user'].name == 'foo'
+    assert values['user'].email == 'foo@example.com'
 
 # def test_sub_object():
 #     jv = JsonValue()
