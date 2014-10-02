@@ -13,23 +13,23 @@ class JsonValue(object):
         for type in types:
             self.type(type.id(), type)
 
-    def load_value(self, id, value):
+    def load_value(self, id, value, **kw):
         type = self._url_to_type.get(id)
         if type is None or value is None:
             return value
-        if not type.validate_load(value):
+        if not type.validate_load(value, **kw):
             raise ValueError("Cannot load as %s: %r" %
                              (type.id(), value))
-        return type.load(value)
+        return type.load(value, **kw)
 
-    def dump_value(self, id, value):
+    def dump_value(self, id, value, **kw):
         type = self._url_to_type.get(id)
         if type is None or value is None:
             return value
         if not type.validate_dump(value):
             raise ValueError("Cannot dump as %s: %r" %
                              (type.id(), value))
-        return type.dump(value)
+        return type.dump(value, **kw)
 
     def to_values(self, d, context=None):
         """Take JSON dict, return JSON dict with rich values.
@@ -39,8 +39,8 @@ class JsonValue(object):
             context = original_context
         wrapped = { 'http://jsonvalue.org/main': d,
                     '@context': context }
-        expanded = self.expand_to_values(wrapped, context)
-        wrapped_objects = Objectifier(self.load_value, context)(expanded)
+        expanded = jsonld.expand(wrapped, dict(expandContext=context))
+        wrapped_objects = Transformer(self.load_value, context)(expanded)
         result = wrapped_objects['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
             result['@context'] = original_context
@@ -185,7 +185,7 @@ def _transform_value(d, transform):
     return d
 
 
-class Objectifier(object):
+class Transformer(object):
     def __init__(self, transform, context):
         self.transform = transform
         self.context = context
@@ -246,11 +246,13 @@ class Objectifier(object):
         type = d.get('@type')
         if type is None:
             return d
-        # XXX what if there are more than one types?
-        type = type[0]
         value = d.get('@value')
         if value is not None:
+            d = d.copy()
+            d['@value'] = self.transform(type, value)
             return d
+        # XXX what if there are more than one node types?
+        type = type[0]
         # XXX would be nice to be able to avoid compaction if
         # type isn't recognized anyway. either move this logic
         # into transform somehow (but how to get context and objects?)
@@ -267,3 +269,4 @@ class Objectifier(object):
             '@type': 'http://jsonvalue.org/object_type',
             '@value': new_id,
         }
+

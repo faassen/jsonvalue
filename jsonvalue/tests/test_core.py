@@ -496,7 +496,7 @@ def test_schema_org_data_type_load_time_wrong():
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
 
-def test_node_to_value():
+def test_node_to_from_value():
     jv = JsonValue()
 
     class User(object):
@@ -527,19 +527,23 @@ def test_node_to_value():
         'user': 'http://example.com/user',
     }
 
-    values = jv.to_values({
+    json = {
         'user': {
             '@type': user_node_type.id(),
             'name': 'foo',
             'email': 'foo@example.com'
         }
-    },
-    context=context)
+    }
+    values = jv.to_values(json, context=context)
 
     assert len(values) == 1
     assert isinstance(values['user'], User)
     assert values['user'].name == 'foo'
     assert values['user'].email == 'foo@example.com'
+
+#    json_out = jv.from_values(values, context=context)
+#    assert json_out == json
+
 
 def test_outer_node_to_value():
     jv = JsonValue()
