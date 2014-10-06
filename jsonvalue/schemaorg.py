@@ -6,10 +6,6 @@ class SchemaOrgType(object):
     def id(cls):
         return 'http://schema.org/%s' % cls.__name__
 
-    @classmethod
-    def cls(cls):
-        return cls
-
     @staticmethod
     def validate_load(value):
         return True

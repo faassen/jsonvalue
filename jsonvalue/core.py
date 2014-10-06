@@ -114,9 +114,6 @@ class CustomDataType(object):
     def id(self):
         return 'http://jsonvalue.org/internal/datatype/%s' % self._cls.__name__
 
-    def cls(self):
-        return self._cls
-
     def validate_load(self, value):
         return True
 
@@ -132,9 +129,6 @@ class CustomNodeType(object):
 
     def id(self):
         return 'http://jsonvalue.org/internal/nodetype/%s' % self._cls.__name__
-
-    def cls(self):
-        return self._cls
 
     def validate_load(self, value):
         if not isinstance(value, dict):
