@@ -61,8 +61,10 @@ class JsonValue(object):
         original_context = d.get('@context')
         if context is None:
             context = original_context
-        wrapped = { 'http://jsonvalue.org/main': d,
-                    '@context': context }
+        wrapped = {
+            'http://jsonvalue.org/main': d,
+            '@context': context
+        }
         expanded = jsonld.expand(wrapped, dict(expandContext=context))
         wrapped_objects = LoadTransformer(
             self.load_node, self.can_load_node,
@@ -75,14 +77,23 @@ class JsonValue(object):
     def from_values(self, d, context=None):
         """Take rich JSON dict, return plain JSON dict without rich values.
         """
-        original_context = d.get('@context')
+        if isinstance(d, dict):
+            original_context = d.get('@context')
+        else:
+            original_context = None
         if context is None:
             context = original_context
+        wrapped = {
+            'http://jsonvalue.org/main': d,
+            '@context': context
+        }
         result = DumpTransformer(
-            self.dump_node, self.can_dump_node, self.dump_value, context)(d)
-        result = jsonld.compact(result, context)
-        if original_context is None:
-            del result['@context']
+            self.dump_node, self.can_dump_node, self.dump_value, context)(
+                wrapped)
+        wrapped_d = jsonld.compact(result, context)
+        result = wrapped_d['http://jsonvalue.org/main']
+        if isinstance(result, dict) and original_context is not None:
+            result['@context'] = original_context
         return result
 
     # JSON module style API

@@ -531,16 +531,20 @@ def test_outer_node_to_value():
         }
     }
 
-    values = jv.to_values({
+    json = {
         '@type': user_node_type.id(),
         'name': 'foo',
         'email': 'foo@example.com'
-    },
-    context=context)
+    }
+
+    values = jv.to_values(json, context=context)
 
     assert isinstance(values, User)
     assert values.name == 'foo'
     assert values.email == 'foo@example.com'
+
+    json_out = jv.from_values(values, context=context)
+    assert json_out == json
 
 
 def test_nested_node_values():
