@@ -40,7 +40,7 @@ class JsonValue(object):
         wrapped = { 'http://jsonvalue.org/main': d,
                     '@context': context }
         expanded = jsonld.expand(wrapped, dict(expandContext=context))
-        wrapped_objects = Transformer(self.load_value, context)(expanded)
+        wrapped_objects = ToValuesTransformer(self.load_value, context)(expanded)
         result = wrapped_objects['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
             result['@context'] = original_context
@@ -185,7 +185,7 @@ def _transform_value(d, transform):
     return d
 
 
-class Transformer(object):
+class ToValuesTransformer(object):
     def __init__(self, transform, context):
         self.transform = transform
         self.context = context
