@@ -56,7 +56,7 @@ class JsonValue(object):
         result['@type'] = t.id()
         return result
 
-    def to_values(self, d, context=None):
+    def load_values(self, d, context=None):
         """Take JSON dict, return JSON dict with rich values.
         """
         original_context = d.get('@context')
@@ -75,7 +75,7 @@ class JsonValue(object):
             result['@context'] = original_context
         return result
 
-    def from_values(self, d, context=None):
+    def dump_values(self, d, context=None):
         """Take rich JSON dict, return plain JSON dict without rich values.
         """
         if isinstance(d, dict):
