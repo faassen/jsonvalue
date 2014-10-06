@@ -576,7 +576,7 @@ def test_nested_node_values():
 
     user_node_type = CustomNodeType(User, dump_user, load_user)
 
-    jv.node_type(users_node_type.id(), User, users_node_type)
+    jv.node_type(users_node_type.id(), Users, users_node_type)
     jv.node_type(user_node_type.id(), User, user_node_type)
 
     context = {
@@ -591,7 +591,7 @@ def test_nested_node_values():
         'users': 'http://example.com/users'
     }
 
-    values = jv.to_values({
+    json = {
         '@type': users_node_type.id(),
         'users': [
             {
@@ -605,8 +605,8 @@ def test_nested_node_values():
                 'email': 'bar@example.com',
             },
         ]
-    },
-    context=context)
+    }
+    values = jv.to_values(json, context=context)
 
     assert isinstance(values, Users)
     assert len(values.users) == 2
@@ -618,3 +618,6 @@ def test_nested_node_values():
 
     assert user2.name == 'bar'
     assert user2.email == 'bar@example.com'
+
+    json_out = jv.from_values(values, context=context)
+    assert json_out == json

@@ -2,6 +2,7 @@ from pyld import jsonld
 import json
 from types import NoneType
 
+# XXX skip @context dictionary when doing a dump/load
 
 class JsonValue(object):
     def __init__(self):
