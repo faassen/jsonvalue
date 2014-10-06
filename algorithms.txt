@@ -1,0 +1,25 @@
+algorithms:
+
+from values:
+* expand according to given context
+* go depth first
+* transform @value node first according to its type
+* transform node with @type and no value:
+    * compact node according to preferred context
+    * now pass into load function
+    * make object URL
+    * place object URL in result as @value with special @type
+* compact according to preferred context
+* depth first realize of objects (note: @type must be @type in preferred
+  context)
+
+
+to values:
+
+* go depth first dump of objects:
+  * lookup class, dump instance (reg?).
+  * may also dump non-JSON values
+* now use preferred context to expand
+* transform any remaining @value to JSON
+* compact using given context
+
