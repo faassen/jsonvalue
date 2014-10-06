@@ -281,6 +281,9 @@ class DumpTransformer(object):
     def _dump_dict(self, d):
         result = {}
         for key, value in d.items():
+            if key.startswith('@'):
+                result[key] = value
+                continue
             result[key] = self.dump(value)
         return result
 
