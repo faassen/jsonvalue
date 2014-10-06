@@ -6,6 +6,10 @@ class SchemaOrgType(object):
     def id(cls):
         return 'http://schema.org/%s' % cls.__name__
 
+    @classmethod
+    def cls(cls):
+        return cls
+
     @staticmethod
     def validate_load(value):
         return True
@@ -116,5 +120,9 @@ class Time(DataType):
         return isinstance(value, time)
 
 
-DATA_TYPE_VOCABULARY = [DataType, Boolean, Number, Float, Integer, Text,
-                        URL, Date, DateTime, Time]
+DATA_TYPE_VOCABULARY = {}
+
+for t in [DataType, Boolean, Number, Float, Integer, Text,
+          URL, Date, DateTime, Time]:
+    DATA_TYPE_VOCABULARY[t.id()] = t
+

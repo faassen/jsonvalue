@@ -17,7 +17,7 @@ def test_to_values():
     }
 
     info = JsonValue()
-    info.type('http://example.com/date', schemaorg.Date)
+    info.value_type('http://example.com/date', schemaorg.Date)
 
     values = info.to_values(d, d['@context'])
     assert values == {
@@ -46,10 +46,10 @@ SCHEMA_ORG_DATA_TYPES_CONTEXT = datatypes(dict(
 ))
 
 
-def test_schema_org_data_type_vocabulary_from_values():
+def test_schema_org_data_type_vocabulary_from_values_flat():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     plain = jv.from_values(dict(
         a=True,
@@ -79,7 +79,7 @@ def test_schema_org_data_type_vocabulary_from_values():
 def test_schema_org_data_type_vocabulary_to_values():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     values = jv.to_values(dict(
         a=True,
@@ -109,7 +109,7 @@ def test_schema_org_data_type_vocabulary_to_values():
 def test_schema_org_data_type_vocabulary_to_values_nested():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     context = {
         "a": {
@@ -157,7 +157,7 @@ def test_schema_org_data_type_vocabulary_to_values_nested():
 def test_schema_org_data_type_vocabulary_from_values_nested():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     context = {
         "a": {
@@ -205,7 +205,7 @@ def test_schema_org_data_type_vocabulary_from_values_nested():
 def test_schema_org_none_from_values():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     plain = jv.from_values(dict(
         a=None,
@@ -226,7 +226,7 @@ def test_schema_org_none_from_values():
 def test_schema_org_none_to_values():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     values = jv.to_values(dict(
         a=None,
@@ -247,7 +247,7 @@ def test_schema_org_none_to_values():
 def test_schema_org_data_type_dump_boolean_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -258,7 +258,7 @@ def test_schema_org_data_type_dump_boolean_wrong():
 def test_schema_org_data_type_dump_number_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -269,7 +269,7 @@ def test_schema_org_data_type_dump_number_wrong():
 def test_schema_org_data_type_dump_float_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -280,7 +280,7 @@ def test_schema_org_data_type_dump_float_wrong():
 def test_schema_org_data_type_dump_integer_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -296,7 +296,7 @@ def test_schema_org_data_type_dump_integer_wrong():
 def test_schema_org_data_type_dump_text_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -307,7 +307,7 @@ def test_schema_org_data_type_dump_text_wrong():
 def test_schema_org_data_type_dump_url_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -318,7 +318,7 @@ def test_schema_org_data_type_dump_url_wrong():
 def test_schema_org_data_type_dump_date_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -329,7 +329,7 @@ def test_schema_org_data_type_dump_date_wrong():
 def test_schema_org_data_type_dump_datetime_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -340,7 +340,7 @@ def test_schema_org_data_type_dump_datetime_wrong():
 def test_schema_org_data_type_dump_time_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.from_values(
@@ -351,7 +351,7 @@ def test_schema_org_data_type_dump_time_wrong():
 def test_schema_org_data_type_load_boolean_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -362,7 +362,7 @@ def test_schema_org_data_type_load_boolean_wrong():
 def test_schema_org_data_type_load_number_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -373,7 +373,7 @@ def test_schema_org_data_type_load_number_wrong():
 def test_schema_org_data_type_load_float_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -384,7 +384,7 @@ def test_schema_org_data_type_load_float_wrong():
 def test_schema_org_data_type_load_integer_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -400,7 +400,7 @@ def test_schema_org_data_type_load_integer_wrong():
 def test_schema_org_data_type_load_text_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -411,7 +411,7 @@ def test_schema_org_data_type_load_text_wrong():
 def test_schema_org_data_type_load_url_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -422,7 +422,7 @@ def test_schema_org_data_type_load_url_wrong():
 def test_schema_org_data_type_load_date_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -433,7 +433,7 @@ def test_schema_org_data_type_load_date_wrong():
 def test_schema_org_data_type_load_datetime_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -444,7 +444,7 @@ def test_schema_org_data_type_load_datetime_wrong():
 def test_schema_org_data_type_load_time_wrong():
     jv = JsonValue()
 
-    jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
     with pytest.raises(ValueError):
         jv.to_values(
@@ -469,7 +469,7 @@ def test_node_to_from_value():
 
     user_node_type = CustomNodeType(User, dump_user, load_user)
 
-    jv.type(user_node_type.id(), user_node_type)
+    jv.node_type(user_node_type.id(), User, user_node_type)
 
     context = {
         'name': {
@@ -497,8 +497,8 @@ def test_node_to_from_value():
     assert values['user'].name == 'foo'
     assert values['user'].email == 'foo@example.com'
 
-#    json_out = jv.from_values(values, context=context)
-#    assert json_out == json
+    json_out = jv.from_values(values, context=context)
+    assert json_out == json
 
 
 def test_outer_node_to_value():
@@ -518,7 +518,7 @@ def test_outer_node_to_value():
 
     user_node_type = CustomNodeType(User, dump_user, load_user)
 
-    jv.type(user_node_type.id(), user_node_type)
+    jv.node_type(user_node_type.id(), User, user_node_type)
 
     context = {
         'name': {
@@ -572,8 +572,8 @@ def test_nested_node_values():
 
     user_node_type = CustomNodeType(User, dump_user, load_user)
 
-    jv.type(users_node_type.id(), users_node_type)
-    jv.type(user_node_type.id(), user_node_type)
+    jv.node_type(users_node_type.id(), User, users_node_type)
+    jv.node_type(user_node_type.id(), User, user_node_type)
 
     context = {
         'name': {

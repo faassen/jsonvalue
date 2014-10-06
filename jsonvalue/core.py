@@ -1,35 +1,59 @@
 from pyld import jsonld
 import json
+from types import NoneType
 
 
 class JsonValue(object):
     def __init__(self):
-        self._url_to_type = {}
+        self._iri_to_value_type = {}
+        self._iri_to_node_type = {}
+        self._class_to_node_type = {}
 
-    def type(self, iri, type):
-        self._url_to_type[iri] = type
+    def value_type(self, iri, type):
+        self._iri_to_value_type[iri] = type
 
-    def vocabulary(self, types):
-        for type in types:
-            self.type(type.id(), type)
+    def node_type(self, iri, cls, type):
+        self._iri_to_node_type[iri] = type
+        # XXX use reg for this
+        self._class_to_node_type[cls] = type
+
+    def value_vocabulary(self, types):
+        for iri, type in types.items():
+            self.value_type(iri, type)
 
     def load_value(self, id, value, **kw):
-        type = self._url_to_type.get(id)
-        if type is None or value is None:
+        t = self._iri_to_value_type.get(id)
+        if t is None or value is None:
             return value
-        if not type.validate_load(value, **kw):
-            raise ValueError("Cannot load as %s: %r" %
-                             (type.id(), value))
-        return type.load(value, **kw)
+        if not t.validate_load(value, **kw):
+            raise ValueError("Cannot load value as %s: %r" %
+                             (id, value))
+        return t.load(value, **kw)
 
     def dump_value(self, id, value, **kw):
-        type = self._url_to_type.get(id)
-        if type is None or value is None:
+        t = self._iri_to_value_type.get(id)
+        if t is None or value is None:
             return value
-        if not type.validate_dump(value):
-            raise ValueError("Cannot dump as %s: %r" %
-                             (type.id(), value))
-        return type.dump(value, **kw)
+        if not t.validate_dump(value):
+            raise ValueError("Cannot dump value as %s: %r" %
+                             (id, value))
+        return t.dump(value, **kw)
+
+    def can_load_node(self, id, **kw):
+        return id in self._iri_to_node_type
+
+    def load_node(self, id, d, **kw):
+        t = self._iri_to_node_type[id]
+        return t.load(d, **kw)
+
+    def can_dump_node(self, obj, **kw):
+        return type(obj) in self._class_to_node_type
+
+    def dump_node(self, obj, **kw):
+        t = self._class_to_node_type[type(obj)]
+        result = t.dump(obj, **kw)
+        result['@type'] = t.id()
+        return result
 
     def to_values(self, d, context=None):
         """Take JSON dict, return JSON dict with rich values.
@@ -40,7 +64,8 @@ class JsonValue(object):
         wrapped = { 'http://jsonvalue.org/main': d,
                     '@context': context }
         expanded = jsonld.expand(wrapped, dict(expandContext=context))
-        wrapped_objects = ToValuesTransformer(
+        wrapped_objects = LoadTransformer(
+            self.load_node, self.can_load_node,
             self.load_value, context)(expanded)
         result = wrapped_objects['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
@@ -53,9 +78,8 @@ class JsonValue(object):
         original_context = d.get('@context')
         if context is None:
             context = original_context
-        expanded = jsonld.expand(d, dict(expandContext=context))
-        result = FromValuesTransformer(
-            self.dump_value, self.dump_value, context)(expanded)
+        result = DumpTransformer(
+            self.dump_node, self.can_dump_node, self.dump_value, context)(d)
         result = jsonld.compact(result, context)
         if original_context is None:
             del result['@context']
@@ -83,28 +107,34 @@ class JsonValue(object):
 
 class CustomDataType(object):
     def __init__(self, cls, dump, load):
-        self.cls = cls
+        self._cls = cls
         self.dump = dump
         self.load = load
 
     def id(self):
-        return 'http://jsonvalue.org/internal/datatype/%s' % self.cls.__name__
+        return 'http://jsonvalue.org/internal/datatype/%s' % self._cls.__name__
+
+    def cls(self):
+        return self._cls
 
     def validate_load(self, value):
         return True
 
     def validate_dump(self, value):
-        return isinstance(value, self.cls)
+        return isinstance(value, self._cls)
 
 
 class CustomNodeType(object):
     def __init__(self, cls, dump, load):
-        self.cls = cls
+        self._cls = cls
         self.dump = dump
         self.load = load
 
     def id(self):
-        return 'http://jsonvalue.org/internal/nodetype/%s' % self.cls.__name__
+        return 'http://jsonvalue.org/internal/nodetype/%s' % self._cls.__name__
+
+    def cls(self):
+        return self._cls
 
     def validate_load(self, value):
         if not isinstance(value, dict):
@@ -113,7 +143,7 @@ class CustomNodeType(object):
         return type == self.id()
 
     def validate_dump(self, value):
-        return isinstance(value, self.cls)
+        return isinstance(value, self._cls)
 
 
 def datatypes(d):
@@ -134,9 +164,11 @@ def datatypes(d):
     return context
 
 
-class ToValuesTransformer(object):
-    def __init__(self, transform, context):
-        self.transform = transform
+class LoadTransformer(object):
+    def __init__(self, load_node, can_load_node, load_value, context):
+        self.load_node = load_node
+        self.can_load_node = can_load_node
+        self.load_value = load_value
         self.context = context
 
     def __call__(self, expanded):
@@ -198,18 +230,16 @@ class ToValuesTransformer(object):
         value = d.get('@value')
         if value is not None:
             d = d.copy()
-            d['@value'] = self.transform(type, value)
+            d['@value'] = self.load_value(type, value)
             return d
         # XXX what if there are more than one node types?
         type = type[0]
-        # XXX would be nice to be able to avoid compaction if
-        # type isn't recognized anyway. either move this logic
-        # into transform somehow (but how to get context and objects?)
-        # or extend transformation api with can_transform
+        if not self.can_load_node(type):
+            return d
         compacted = jsonld.compact(d, self.context)
         del compacted['@context']
         compacted = self.realize(compacted, objects)
-        obj = self.transform(type, compacted)
+        obj = self.load_node(type, compacted)
         if obj is None:
             return d
         new_id = 'http://jsonvalue.org/object/%s' % len(objects)
@@ -220,14 +250,41 @@ class ToValuesTransformer(object):
         }
 
 
-class FromValuesTransformer(object):
-    def __init__(self, transform_node, transform_value, context):
-        self.transform_node = transform_node
-        self.transform_value = transform_value
+class DumpTransformer(object):
+    def __init__(self, dump_node, can_dump_node, dump_value, context):
+        self.dump_node = dump_node
+        self.can_dump_node = can_dump_node
+        self.dump_value = dump_value
         self.context = context
 
-    def __call__(self, expanded):
+    def __call__(self, d):
+        d = self.dump(d)
+        expanded = jsonld.expand(d, dict(expandContext=self.context))
         return self._expanded(expanded)
+
+    def dump(self, d):
+        if isinstance(d, dict):
+            return self._dump_dict(d)
+        elif isinstance(d, list):
+            return self._dump_list(d)
+        elif isinstance(d, (basestring, int, float, bool, NoneType)):
+            return d
+        else:
+            return self._dump_obj(d)
+
+    def _dump_dict(self, d):
+        result = {}
+        for key, value in d.items():
+            result[key] = self.dump(value)
+        return result
+
+    def _dump_list(self, l):
+        return [self.dump(item) for item in l]
+
+    def _dump_obj(self, obj):
+        if not self.can_dump_node(obj):
+            return obj
+        return self.dump(self.dump_node(obj))
 
     def _expanded(self, expanded):
         result = []
@@ -261,5 +318,5 @@ class FromValuesTransformer(object):
         if value is None:
             return self._dict(d)
         d = d.copy()
-        d['@value'] = self.transform_value(type, value)
+        d['@value'] = self.dump_value(type, value)
         return d
