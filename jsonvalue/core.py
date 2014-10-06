@@ -40,7 +40,8 @@ class JsonValue(object):
         wrapped = { 'http://jsonvalue.org/main': d,
                     '@context': context }
         expanded = jsonld.expand(wrapped, dict(expandContext=context))
-        wrapped_objects = ToValuesTransformer(self.load_value, context)(expanded)
+        wrapped_objects = ToValuesTransformer(
+            self.load_value, context)(expanded)
         result = wrapped_objects['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
             result['@context'] = original_context
@@ -52,26 +53,13 @@ class JsonValue(object):
         original_context = d.get('@context')
         if context is None:
             context = original_context
-        result = self.compact_from_values(
-            jsonld.expand(d, dict(expandContext=context)),
-            context)
+        expanded = jsonld.expand(d, dict(expandContext=context))
+        result = FromValuesTransformer(
+            self.dump_value, self.dump_value, context)(expanded)
+        result = jsonld.compact(result, context)
         if original_context is None:
             del result['@context']
         return result
-
-    def expand_to_values(self, d, context):
-        """Take JSON dict, return expanded dict with rich values.
-        """
-        return _transform_expanded(
-            jsonld.expand(d,dict(expandContext=context)),
-            self.load_value)
-
-    def compact_from_values(self, expanded, context):
-        """Take expanded JSON list, return JSON dict with plain values.
-        """
-        return jsonld.compact(_transform_expanded(expanded, self.dump_value),
-                              context)
-
 
     # JSON module style API
     def dump(self, obj, *args, **kw):
@@ -144,45 +132,6 @@ def datatypes(d):
             '@type': type_id,
         }
     return context
-
-
-def _transform_expanded(expanded, transform):
-    result = []
-    for d in expanded:
-        result.append(_transform_dict(d, transform))
-    return result
-
-
-def _transform_dict(d, transform):
-    result = {}
-    for key, l in d.items():
-        if not isinstance(l, list):
-            result[key] = l
-            continue
-        result[key] = _transform_list(l, transform)
-    return result
-
-
-def _transform_list(l, transform):
-    result = []
-    for d in l:
-        if not isinstance(d, dict):
-            result.append(d)
-            continue
-        result.append(_transform_value(d, transform))
-    return result
-
-
-def _transform_value(d, transform):
-    type = d.get('@type')
-    if type is None:
-        return _transform_dict(d, transform)
-    value = d.get('@value')
-    if value is None:
-        return _transform_dict(d, transform)
-    d = d.copy()
-    d['@value'] = transform(type, value)
-    return d
 
 
 class ToValuesTransformer(object):
@@ -270,3 +219,47 @@ class ToValuesTransformer(object):
             '@value': new_id,
         }
 
+
+class FromValuesTransformer(object):
+    def __init__(self, transform_node, transform_value, context):
+        self.transform_node = transform_node
+        self.transform_value = transform_value
+        self.context = context
+
+    def __call__(self, expanded):
+        return self._expanded(expanded)
+
+    def _expanded(self, expanded):
+        result = []
+        for d in expanded:
+            result.append(self._dict(d))
+        return result
+
+    def _dict(self, d):
+        result = {}
+        for key, l in d.items():
+            if not isinstance(l, list):
+                result[key] = l
+                continue
+            result[key] = self._list(l)
+        return result
+
+    def _list(self, l):
+        result = []
+        for d in l:
+            if not isinstance(d, dict):
+                result.append(d)
+                continue
+            result.append(self._value(d))
+        return result
+
+    def _value(self, d):
+        type = d.get('@type')
+        if type is None:
+            return self._dict(d)
+        value = d.get('@value')
+        if value is None:
+            return self._dict(d)
+        d = d.copy()
+        d['@value'] = self.transform_value(type, value)
+        return d

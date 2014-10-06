@@ -5,50 +5,6 @@ from datetime import datetime, date, time
 import pytest
 
 
-def test_expand_to_values_no_converters():
-    d = {
-        '@context': {
-            'foo': {
-                '@id': 'http://example.com/foo',
-                '@type': 'http://example.com/date'
-            }
-        },
-        'foo': '2010-01-01'
-    }
-
-    info = JsonValue()
-    assert info.expand_to_values(d, d['@context']) == jsonld.expand(d)
-
-
-def test_expand_to_values_converter():
-    d = {
-        '@context': {
-            'foo': {
-                '@id': 'http://example.com/foo',
-                '@type': 'http://example.com/date'
-            }
-        },
-        'foo': '2010-01-01'
-    }
-
-    info = JsonValue()
-
-
-    info.type('http://example.com/date', schemaorg.Date)
-
-    expanded = info.expand_to_values(d, d['@context'])
-
-    assert expanded == [
-        {
-            u'http://example.com/foo':
-            [{'@type': u'http://example.com/date',
-              '@value': date(2010, 1, 1)}]
-        }
-    ]
-
-    assert info.compact_from_values(expanded, d['@context']) == d
-
-
 def test_to_values():
     d = {
         '@context': {
