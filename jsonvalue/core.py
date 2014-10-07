@@ -245,9 +245,9 @@ class LoadTransformer(object):
             except ValueLoadError, e:
                 info.errors.append(e)
             return d
-        return self._node_value(term, d, type, info)
+        return self._node_value(d, type, info)
 
-    def _node_value(self, term, d, type, info):
+    def _node_value(self, d, type, info):
         # XXX what if there are more than one node types?
         type = type[0]
         if not self.jv.can_load_node(type):
