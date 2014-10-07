@@ -150,20 +150,24 @@ Then we can use it for dumping and loading JSON::
   >>> jv.loads('{"user": "@faassen"}', context=valuetypes({'user': user_datatype}))
   {u'user': <User object at 0x...>}
 
-Preparing load and dump
------------------------
+Dumping and loading values
+--------------------------
 
-Sometimes you don't want to directly generate JSON but generate a
-Python representation of the JSON instead. This just materializes any
-rich values you have as JSON-compliant types instead. To do this you
-can use ``from_values``:
+Soemtimes you don't want to directly generate a JSON string but
+generate a Python representation of the JSON instead. The ``dump_values``
+method materializes any rich values you have as JSON-compliant values:
 
-  >> jv.from_values()
+.. doctest::
 
-You can also take such a materialized JSON-compliant structure and
-turn it into rich values again::
+  >>> jv.dump_values({u'user': User("faassen")}, context=valuetypes({'user': user_datatype}))
+  {u'user': '@faassen'}
 
-  >> jv.to_values()
+You can also turn a JSON structure and turn it into rich values:
+
+.. doctest::
+
+  >>> jv.load_values({u'user': '@faassen'}, context=valuetypes({'user': user_datatype}))
+  {u'user': <User object at 0x...>}
 
 JSON-LD under the hood
 ----------------------
