@@ -169,23 +169,3 @@ You can also turn a JSON structure into objects:
 
   >>> jv.load_objects({u'user': '@faassen'}, context=valuetypes({'user': user_datatype}))
   {u'user': <User object at 0x...>}
-
-JSON-LD under the hood
-----------------------
-
-JsonValue is built on JSON-LD. JSON-LD allows you to describe types
-for values *embedded* in a JSON structure, using the ``@context``
-mechanism. With the ``generate_context`` argument for the ``dumps``
-function you can make sure such a context is generated and embedded
-from the types argument::
-
-  >> jv.dumps(..., generate_context=True)
-  ...
-
-Since the context is now embedded, this means that you don't need to
-give the types information to ``loads`` explicitly::
-
-  >> js.loads(...)
-
-You can always still supply ``types`` explicitly, and it will use this
-instead of the context.
