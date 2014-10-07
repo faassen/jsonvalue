@@ -122,6 +122,7 @@ class JsonValue(object):
         return self.load_objects(plain, context)
 
 
+# XXX rename to CustomValueType
 class CustomDataType(object):
     def __init__(self, cls, dump, load):
         self._cls = cls
@@ -151,6 +152,7 @@ class CustomNodeType(object):
     def validate_load(self, value):
         if not isinstance(value, dict):
             return False
+        # XXX is this check ever called?
         type = value.get('@type')
         return type == self.id()
 
