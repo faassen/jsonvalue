@@ -4,6 +4,9 @@
 * errors for loading and dumping nodes too, instead of values. How to
   deal with error handling here? Always fail if load/dump function errors?
 
+* should we have an load error where a value described in the context
+  is required, i.e. if it is missing/None then it's an error?
+
 * describe exceptions that can happen in docs.
 
 * API docs.
