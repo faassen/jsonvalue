@@ -13,4 +13,5 @@
 * what is the right behavior for a type that we don't have a
   loader/dumper for? Right now I think we pass them through literally,
   but if you want to do true validation you cannot do this, right?
-  What about when type is missing?
+  What about when type is missing? Node type versus value type?
+

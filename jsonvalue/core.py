@@ -23,6 +23,9 @@ class JsonValue(object):
         for iri, type in types.items():
             self.value_type(iri, type)
 
+    def can_load_value(self, id):
+        return id in self._iri_to_value_type
+
     def load_value(self, term, type, value, **kw):
         t = self._iri_to_value_type.get(type)
         if t is None or value is None:
@@ -61,7 +64,7 @@ class JsonValue(object):
         result['@type'] = t.id()
         return result
 
-    def load_objects(self, d, context=None):
+    def load_objects(self, d, context=None, reject_unknown=False):
         """Take JSON dict, return rich values.
         """
         original_context = d.get('@context')
@@ -72,7 +75,8 @@ class JsonValue(object):
             '@context': context
         }
         expanded = jsonld.expand(wrapped, dict(expandContext=context))
-        wrapped_objects = LoadTransformer(self, context)(expanded)
+        wrapped_objects = LoadTransformer(self, context, reject_unknown)(
+            expanded)
         result = wrapped_objects['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
             result['@context'] = original_context
@@ -179,9 +183,10 @@ class LoadInfo(object):
 
 
 class LoadTransformer(object):
-    def __init__(self, jv, context):
+    def __init__(self, jv, context, reject_unknown):
         self.jv = jv
         self.context = context
+        self.reject_unknown = reject_unknown
 
     def __call__(self, expanded):
         load_info = LoadInfo()
@@ -239,6 +244,10 @@ class LoadTransformer(object):
             return d
         value = d.get('@value')
         if value is not None:
+            if not self.jv.can_load_value(type):
+                if self.reject_unknown:
+                    info.errors.append(ValueLoadError(term, type, value))
+                return d
             d = d.copy()
             try:
                 d['@value'] = self.jv.load_value(term, type, value)

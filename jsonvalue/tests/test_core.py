@@ -846,3 +846,43 @@ def test_nested_node_values():
 
     json_out = jv.dump_objects(values, context=context)
     assert json_out == json
+
+
+def test_unknown_value_type():
+    d = {
+        '@context': {
+            'foo': {
+                '@id': 'http://example.com/foo',
+                '@type': 'http://example.com/date'
+            }
+        },
+        'foo': '2010-01-01'
+    }
+
+    info = JsonValue()
+
+    # we register no type for http://example.com/date. This value
+    # is therefore passed through literally
+    values = info.load_objects(d, d['@context'])
+    assert values == {
+        '@context': {
+            'foo': {
+                '@id': 'http://example.com/foo',
+                '@type': 'http://example.com/date'
+            }
+        },
+        'foo': '2010-01-01'
+    }
+
+    assert info.dump_objects(values) == d
+
+    # we can however instruct the system to bail out as soon as
+    # a unrecognized value type is recognized
+    with pytest.raises(error.LoadError) as e:
+        info.load_objects(d, d['@context'], reject_unknown=True)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://example.com/foo'
+    assert errors[0].type == 'http://example.com/date'
+    assert errors[0].value == '2010-01-01'
