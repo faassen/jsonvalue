@@ -886,3 +886,40 @@ def test_unknown_value_type():
     assert errors[0].term == 'http://example.com/foo'
     assert errors[0].type == 'http://example.com/date'
     assert errors[0].value == '2010-01-01'
+
+
+def test_missing_value_type():
+    # we don't declare a value type for 'foo'
+    d = {
+        '@context': {
+            'foo': {
+                '@id': 'http://example.com/foo',
+            }
+        },
+        'foo': '2010-01-01'
+    }
+
+    info = JsonValue()
+
+    values = info.load_objects(d, d['@context'])
+    assert values == {
+        '@context': {
+            'foo': {
+                '@id': 'http://example.com/foo',
+            }
+        },
+        'foo': '2010-01-01'
+    }
+
+    assert info.dump_objects(values) == d
+
+    # we can however instruct the system to bail out as soon as
+    # a missing value type is recognized
+    with pytest.raises(error.LoadError) as e:
+        info.load_objects(d, d['@context'], reject_unknown=True)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://example.com/foo'
+    assert errors[0].type is None
+    assert errors[0].value == '2010-01-01'

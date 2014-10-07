@@ -240,9 +240,12 @@ class LoadTransformer(object):
     def _value(self, term, d, info):
         d = self._dict(d, info)
         type = d.get('@type')
-        if type is None:
-            return d
         value = d.get('@value')
+        if type is None:
+            if value is not None:
+                if self.reject_unknown:
+                    info.errors.append(ValueLoadError(term, None, value))
+            return d
         if value is not None:
             if not self.jv.can_load_value(type):
                 if self.reject_unknown:
