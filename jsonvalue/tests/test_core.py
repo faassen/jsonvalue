@@ -580,6 +580,49 @@ def test_schema_org_data_type_load_time_wrong():
     assert errors[0].value == '25:10:17'
 
 
+def test_multiple_errors_dump_value():
+    jv = JsonValue()
+
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(error.DumpError) as e:
+        jv.dump_objects(
+            dict(a='wrong', b='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 2
+
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/a'
+    assert errors[0].type == 'http://schema.org/Boolean'
+    assert errors[0].value == 'wrong'
+
+    assert errors[1].term == 'http://jsonvalue.org/internal/id/b'
+    assert errors[1].type == 'http://schema.org/Number'
+    assert errors[1].value == 'wrong'
+
+
+def test_multiple_errors_load_value():
+    jv = JsonValue()
+
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(error.LoadError) as e:
+        jv.load_objects(
+            dict(a='wrong', b='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 2
+
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/a'
+    assert errors[0].type == 'http://schema.org/Boolean'
+    assert errors[0].value == 'wrong'
+
+    assert errors[1].term == 'http://jsonvalue.org/internal/id/b'
+    assert errors[1].type == 'http://schema.org/Number'
+    assert errors[1].value == 'wrong'
+
 
 def test_node_load_dump_value():
     jv = JsonValue()

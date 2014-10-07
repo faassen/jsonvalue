@@ -189,6 +189,8 @@ class LoadTransformer(object):
         load_info = LoadInfo()
         objectified = self._list('_', expanded, load_info)
         if load_info.errors:
+            # for a stable errors listing
+            load_info.errors.sort(key=lambda err: err.term)
             raise LoadError(load_info.errors)
         compacted = jsonld.compact(objectified, self.context)
         return self.realize(compacted, load_info.objects)
@@ -276,6 +278,8 @@ class DumpTransformer(object):
         errors = []
         result = self._expanded(expanded, errors)
         if errors:
+            # for a stable errors listing
+            errors.sort(key=lambda err: err.term)
             raise DumpError(errors)
         return result
 
