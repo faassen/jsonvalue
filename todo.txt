@@ -1,11 +1,10 @@
 * internal per-data type context versus user-supplied context.
 
-* describe exceptions that can happen.
+* describe exceptions that can happen in docs.
+
+* API docs.
 
 * morepath integration.
-
-* error message: conversion error for while input conversion, with sub-errors
-  per field.
 
 * what is the right behavior for a type that we don't have a
   loader/dumper for? Right now I think we pass them through literally,
