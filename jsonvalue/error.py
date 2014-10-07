@@ -20,4 +20,3 @@ class ValueDumpError(Exception):
 class DumpError(Exception):
     def __init__(self, errors):
         self.errors = errors
-

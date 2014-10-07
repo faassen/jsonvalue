@@ -1,5 +1,5 @@
-from pyld import jsonld
-from jsonvalue import JsonValue, valuetypes, CustomDataType, CustomNodeType
+from jsonvalue import JsonValue, valuetypes, CustomNodeType
+# XXX add test for CustomDataType
 from jsonvalue import schemaorg, error
 from datetime import datetime, date, time
 import pytest
@@ -678,8 +678,10 @@ def test_node_load_dump_value():
             self.email = email
 
     def dump_user(user):
-        return { 'name': user.name,
-                 'email': user.email }
+        return {
+            'name': user.name,
+            'email': user.email
+        }
 
     def load_user(d):
         return User(d['name'], d['email'])
@@ -696,11 +698,9 @@ def test_node_load_dump_value():
         'user': 'http://example.com/user',
     }
 
-    user_node_type = CustomNodeType(User, dump_user, load_user,
-                                    context)
+    user_node_type = CustomNodeType(User, dump_user, load_user, context)
 
     jv.node_type(user_node_type.id(), user_node_type)
-
 
     json = {
         'user': {
@@ -729,8 +729,10 @@ def test_outer_node_to_value():
             self.email = email
 
     def dump_user(user):
-        return { 'name': user.name,
-                 'email': user.email }
+        return {
+            'name': user.name,
+            'email': user.email
+        }
 
     def load_user(d):
         return User(d['name'], d['email'])
@@ -749,7 +751,6 @@ def test_outer_node_to_value():
     user_node_type = CustomNodeType(User, dump_user, load_user, context)
 
     jv.node_type(user_node_type.id(), user_node_type)
-
 
     json = {
         '@type': user_node_type.id(),
@@ -787,7 +788,9 @@ def test_nested_node_values():
             self.users = users
 
     def dump_users(users):
-        return { 'users': users.users }
+        return {
+            'users': users.users
+        }
 
     def load_users(d):
         return Users(d['users'])
@@ -800,18 +803,18 @@ def test_nested_node_values():
             self.email = email
 
     def dump_user(user):
-        return { 'name': user.name,
-                 'email': user.email }
+        return {
+            'name': user.name,
+            'email': user.email
+        }
 
     def load_user(d):
         return User(d['name'], d['email'])
-
 
     user_node_type = CustomNodeType(User, dump_user, load_user, context)
 
     jv.node_type(users_node_type.id(), users_node_type)
     jv.node_type(user_node_type.id(), user_node_type)
-
 
     json = {
         '@type': users_node_type.id(),

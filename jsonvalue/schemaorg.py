@@ -1,6 +1,7 @@
 import isodate
 from datetime import datetime, date, time
 
+
 class SchemaOrgType(object):
     @classmethod
     def id(cls):
@@ -22,8 +23,10 @@ class SchemaOrgType(object):
     def dump(value):
         return value
 
+
 class DataType(SchemaOrgType):
     pass
+
 
 class Boolean(DataType):
     @staticmethod
@@ -32,6 +35,7 @@ class Boolean(DataType):
 
     validate_dump = validate_load
 
+
 class Number(DataType):
     @staticmethod
     def validate_load(value):
@@ -39,10 +43,12 @@ class Number(DataType):
 
     validate_dump = validate_load
 
+
 class Float(Number):
     @staticmethod
     def load(value):
         return float(value)
+
 
 class Integer(Number):
     @staticmethod
@@ -51,6 +57,7 @@ class Integer(Number):
 
     validate_dump = validate_load
 
+
 class Text(DataType):
     @staticmethod
     def validate_load(value):
@@ -58,9 +65,11 @@ class Text(DataType):
 
     validate_dump = validate_load
 
+
 class URL(Text):
     # XXX specific validation for URL? are paths allowed?
     pass
+
 
 class Date(DataType):
     @staticmethod
@@ -81,6 +90,7 @@ class Date(DataType):
         # better fail early in that case
         return isinstance(value, date) and not isinstance(value, datetime)
 
+
 class DateTime(DataType):
     @staticmethod
     def load(value):
@@ -97,6 +107,7 @@ class DateTime(DataType):
     @staticmethod
     def validate_dump(value):
         return isinstance(value, datetime)
+
 
 class Time(DataType):
     @staticmethod
@@ -121,4 +132,3 @@ DATA_TYPE_VOCABULARY = {}
 for t in [DataType, Boolean, Number, Float, Integer, Text,
           URL, Date, DateTime, Time]:
     DATA_TYPE_VOCABULARY[t.id()] = t
-

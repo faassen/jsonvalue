@@ -1,4 +1,5 @@
-* internal per-data type context versus user-supplied context.
+* do we also need a dump per node type context to do expansion? Answer:
+  since we supply the context ourselves, probably not.
 
 * describe exceptions that can happen in docs.
 
