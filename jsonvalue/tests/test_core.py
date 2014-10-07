@@ -42,7 +42,8 @@ SCHEMA_ORG_DATA_TYPES_CONTEXT = valuetypes(dict(
     f=schemaorg.URL,
     g=schemaorg.Date,
     h=schemaorg.DateTime,
-    i=schemaorg.Time
+    i=schemaorg.Time,
+    sub='http://jsonvalue.org/sub',
 ))
 
 
@@ -602,6 +603,28 @@ def test_multiple_errors_dump_value():
     assert errors[1].value == 'wrong'
 
 
+def test_multiple_errors_nested_dump_value():
+    jv = JsonValue()
+
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(error.DumpError) as e:
+        jv.dump_objects(
+            dict(a='wrong', sub=dict(b='wrong')),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 2
+
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/a'
+    assert errors[0].type == 'http://schema.org/Boolean'
+    assert errors[0].value == 'wrong'
+
+    assert errors[1].term == 'http://jsonvalue.org/internal/id/b'
+    assert errors[1].type == 'http://schema.org/Number'
+    assert errors[1].value == 'wrong'
+
+
 def test_multiple_errors_load_value():
     jv = JsonValue()
 
@@ -610,6 +633,28 @@ def test_multiple_errors_load_value():
     with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(a='wrong', b='wrong'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 2
+
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/a'
+    assert errors[0].type == 'http://schema.org/Boolean'
+    assert errors[0].value == 'wrong'
+
+    assert errors[1].term == 'http://jsonvalue.org/internal/id/b'
+    assert errors[1].type == 'http://schema.org/Number'
+    assert errors[1].value == 'wrong'
+
+
+def test_multiple_errors_nested_load_value():
+    jv = JsonValue()
+
+    jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+
+    with pytest.raises(error.LoadError) as e:
+        jv.load_objects(
+            dict(a='wrong', sub=dict(b='wrong')),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
     errors = e.value.errors
