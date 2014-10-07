@@ -1,1 +1,1 @@
-from .core import JsonValue, datatypes, CustomDataType, CustomNodeType
+from .core import JsonValue, valuetypes, CustomDataType, CustomNodeType

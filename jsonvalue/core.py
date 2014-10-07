@@ -152,8 +152,8 @@ class CustomNodeType(object):
         return isinstance(value, self._cls)
 
 
-def datatypes(d):
-    """Convenience way to specify context using datatype designators.
+def valuetypes(d):
+    """Convenience way to specify context using value type designators.
     """
     context = {}
     for term, datatype in d.items():

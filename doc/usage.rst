@@ -35,7 +35,7 @@ the same restrictions, and then use ``json.dumps``:
 JsonValue lifts these restrictions. Instead of working with just
 dicts, lists, strings, numbers, booleans and ``None`` you can work
 with other values too, such as dates and datetimes. You can even
-represent whole JSON structures (nodes) as a custom Python object.
+represent whole JSON nodes as a custom Python object.
 
 An example using dates
 ----------------------
@@ -50,25 +50,26 @@ transform Python into JSON and back:
   >>> import jsonvalue
   >>> jv = jsonvalue.JsonValue()
 
-We can give ``jv`` a vocabulary of data types, so that it knows how to
-handle basic data types (such as ``Integer``, ``Date``, ``DateTime``,
-``Time``, ``URL`` and some others):
+We can give ``jv`` a vocabulary of value types, so that it knows how
+to handle basic value types (such as ``Integer``, ``Date``,
+``DateTime``, ``Time``, ``URL`` and some others):
 
 .. doctest::
 
   >>> from jsonvalue import schemaorg
   >>> jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-These particular data types are defined here: http://schema.org/DataType.
+These particular value types are defined here:
+http://schema.org/DataType.
 
 We can now serialize an object with Python ``date`` values::
 
 .. doctest::
 
   >>> from datetime import date
-  >>> from jsonvalue import datatypes
+  >>> from jsonvalue import valuetypes
   >>> jv.dumps({u'my_date': date(2010, 1, 1)},
-  ...          context=datatypes({'my_date': schemaorg.Date}))
+  ...          context=valuetypes({'my_date': schemaorg.Date}))
   '{"my_date": "2010-01-01"}'
 
 Note that we need to specify that ``my_date`` is actually a date in
@@ -79,7 +80,7 @@ We can also parse dates when we load JSON:
 
 .. doctest::
 
-  >>> jv.loads('{"my_date": "2010-01-01"}', context=datatypes({'my_date': schemaorg.Date}))
+  >>> jv.loads('{"my_date": "2010-01-01"}', context=valuetypes({'my_date': schemaorg.Date}))
   {u'my_date': datetime.date(2010, 1, 1)}
 
 We need to give it the same ``types`` specification as we gave it for
@@ -144,9 +145,9 @@ Then we can use it for dumping and loading JSON::
 
 .. doctest::
 
-  >>> jv.dumps({u'user': User("faassen")}, context=datatypes({'user': user_datatype}))
+  >>> jv.dumps({u'user': User("faassen")}, context=valuetypes({'user': user_datatype}))
   '{"user": "@faassen"}'
-  >>> jv.loads('{"user": "@faassen"}', context=datatypes({'user': user_datatype}))
+  >>> jv.loads('{"user": "@faassen"}', context=valuetypes({'user': user_datatype}))
   {u'user': <User object at 0x...>}
 
 Preparing load and dump

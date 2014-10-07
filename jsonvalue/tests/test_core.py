@@ -1,5 +1,5 @@
 from pyld import jsonld
-from jsonvalue import JsonValue, datatypes, CustomDataType, CustomNodeType
+from jsonvalue import JsonValue, valuetypes, CustomDataType, CustomNodeType
 from jsonvalue import schemaorg
 from datetime import datetime, date, time
 import pytest
@@ -33,7 +33,7 @@ def test_load_values():
     assert info.dump_values(values) == d
 
 
-SCHEMA_ORG_DATA_TYPES_CONTEXT = datatypes(dict(
+SCHEMA_ORG_DATA_TYPES_CONTEXT = valuetypes(dict(
     a=schemaorg.Boolean,
     b=schemaorg.Number,
     c=schemaorg.Float,
