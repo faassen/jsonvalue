@@ -56,8 +56,8 @@ class JsonValue(object):
         result['@type'] = t.id()
         return result
 
-    def load_values(self, d, context=None):
-        """Take JSON dict, return JSON dict with rich values.
+    def load_objects(self, d, context=None):
+        """Take JSON dict, return rich values.
         """
         original_context = d.get('@context')
         if context is None:
@@ -75,8 +75,8 @@ class JsonValue(object):
             result['@context'] = original_context
         return result
 
-    def dump_values(self, d, context=None):
-        """Take rich JSON dict, return plain JSON dict without rich values.
+    def dump_objects(self, d, context=None):
+        """Take objects, return plain JSON dict without rich values.
         """
         if isinstance(d, dict):
             original_context = d.get('@context')
@@ -99,22 +99,22 @@ class JsonValue(object):
 
     # JSON module style API
     def dump(self, obj, *args, **kw):
-        return json.dump(self.dump_values(obj, kw.pop('context', None)),
+        return json.dump(self.dump_objects(obj, kw.pop('context', None)),
                          *args, **kw)
 
     def dumps(self, obj, *args, **kw):
-        return json.dumps(self.dump_values(obj, kw.pop('context', None)),
+        return json.dumps(self.dump_objects(obj, kw.pop('context', None)),
                           *args, **kw)
 
     def load(self, *args, **kw):
         context = kw.pop('context', None)
         plain = json.load(*args, **kw)
-        return self.load_values(plain, context)
+        return self.load_objects(plain, context)
 
     def loads(self, *args, **kw):
         context = kw.pop('context', None)
         plain = json.loads(*args, **kw)
-        return self.load_values(plain, context)
+        return self.load_objects(plain, context)
 
 
 class CustomDataType(object):
