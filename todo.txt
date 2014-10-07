@@ -4,3 +4,5 @@
 
 * morepath integration.
 
+* error message: conversion error for while input conversion, with sub-errors
+  per field.
