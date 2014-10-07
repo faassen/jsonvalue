@@ -14,10 +14,10 @@ class JsonValue(object):
     def value_type(self, iri, type):
         self._iri_to_value_type[iri] = type
 
-    def node_type(self, iri, cls, type):
+    def node_type(self, iri, type):
         self._iri_to_node_type[iri] = type
         # XXX use reg for this
-        self._class_to_node_type[cls] = type
+        self._class_to_node_type[type.cls] = type
 
     def value_vocabulary(self, types):
         for iri, type in types.items():
@@ -33,6 +33,9 @@ class JsonValue(object):
             return t.load(value, **kw)
         except ValueError:
             raise ValueLoadError(term, type, value)
+
+    def load_context(self, type):
+        return self._iri_to_node_type[type].load_context
 
     def dump_value(self, term, type, value, **kw):
         t = self._iri_to_value_type.get(type)
@@ -69,9 +72,7 @@ class JsonValue(object):
             '@context': context
         }
         expanded = jsonld.expand(wrapped, dict(expandContext=context))
-        wrapped_objects = LoadTransformer(
-            self.load_node, self.can_load_node,
-            self.load_value, context)(expanded)
+        wrapped_objects = LoadTransformer(self, context)(expanded)
         result = wrapped_objects['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
             result['@context'] = original_context
@@ -136,13 +137,14 @@ class CustomDataType(object):
 
 
 class CustomNodeType(object):
-    def __init__(self, cls, dump, load):
-        self._cls = cls
+    def __init__(self, cls, dump, load, load_context):
+        self.cls = cls
         self.dump = dump
         self.load = load
+        self.load_context = load_context
 
     def id(self):
-        return 'http://jsonvalue.org/internal/nodetype/%s' % self._cls.__name__
+        return 'http://jsonvalue.org/internal/nodetype/%s' % self.cls.__name__
 
     def validate_load(self, value):
         if not isinstance(value, dict):
@@ -151,7 +153,7 @@ class CustomNodeType(object):
         return type == self.id()
 
     def validate_dump(self, value):
-        return isinstance(value, self._cls)
+        return isinstance(value, self.cls)
 
 
 def valuetypes(d):
@@ -179,10 +181,8 @@ class LoadInfo(object):
 
 
 class LoadTransformer(object):
-    def __init__(self, load_node, can_load_node, load_value, context):
-        self.load_node = load_node
-        self.can_load_node = can_load_node
-        self.load_value = load_value
+    def __init__(self, jv, context):
+        self.jv = jv
         self.context = context
 
     def __call__(self, expanded):
@@ -243,18 +243,19 @@ class LoadTransformer(object):
         if value is not None:
             d = d.copy()
             try:
-                d['@value'] = self.load_value(term, type, value)
+                d['@value'] = self.jv.load_value(term, type, value)
             except ValueLoadError, e:
                 info.errors.append(e)
             return d
         # XXX what if there are more than one node types?
         type = type[0]
-        if not self.can_load_node(type):
+        if not self.jv.can_load_node(type):
             return d
-        compacted = jsonld.compact(d, self.context)
+        load_context = self.jv.load_context(type)
+        compacted = jsonld.compact(d, load_context)
         del compacted['@context']
         compacted = self.realize(compacted, info.objects)
-        obj = self.load_node(type, compacted)
+        obj = self.jv.load_node(type, compacted)
         if obj is None:
             return d
         new_id = 'http://jsonvalue.org/object/%s' % len(info.objects)

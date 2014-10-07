@@ -684,10 +684,6 @@ def test_node_load_dump_value():
     def load_user(d):
         return User(d['name'], d['email'])
 
-    user_node_type = CustomNodeType(User, dump_user, load_user)
-
-    jv.node_type(user_node_type.id(), User, user_node_type)
-
     context = {
         'name': {
             '@id': 'http://example.com/name',
@@ -699,6 +695,12 @@ def test_node_load_dump_value():
         },
         'user': 'http://example.com/user',
     }
+
+    user_node_type = CustomNodeType(User, dump_user, load_user,
+                                    context)
+
+    jv.node_type(user_node_type.id(), user_node_type)
+
 
     json = {
         'user': {
@@ -733,10 +735,6 @@ def test_outer_node_to_value():
     def load_user(d):
         return User(d['name'], d['email'])
 
-    user_node_type = CustomNodeType(User, dump_user, load_user)
-
-    jv.node_type(user_node_type.id(), User, user_node_type)
-
     context = {
         'name': {
             '@id': 'http://example.com/name',
@@ -747,6 +745,11 @@ def test_outer_node_to_value():
             '@type': schemaorg.Text.id(),
         }
     }
+
+    user_node_type = CustomNodeType(User, dump_user, load_user, context)
+
+    jv.node_type(user_node_type.id(), user_node_type)
+
 
     json = {
         '@type': user_node_type.id(),
@@ -765,6 +768,18 @@ def test_outer_node_to_value():
 
 
 def test_nested_node_values():
+    context = {
+        'name': {
+            '@id': 'http://example.com/name',
+            '@type': schemaorg.Text.id(),
+        },
+        'email': {
+            '@id': 'http://example.com/email',
+            '@type': schemaorg.Text.id(),
+        },
+        'users': 'http://example.com/users'
+    }
+
     jv = JsonValue()
 
     class Users(object):
@@ -777,7 +792,7 @@ def test_nested_node_values():
     def load_users(d):
         return Users(d['users'])
 
-    users_node_type = CustomNodeType(Users, dump_users, load_users)
+    users_node_type = CustomNodeType(Users, dump_users, load_users, context)
 
     class User(object):
         def __init__(self, name, email):
@@ -791,22 +806,12 @@ def test_nested_node_values():
     def load_user(d):
         return User(d['name'], d['email'])
 
-    user_node_type = CustomNodeType(User, dump_user, load_user)
 
-    jv.node_type(users_node_type.id(), Users, users_node_type)
-    jv.node_type(user_node_type.id(), User, user_node_type)
+    user_node_type = CustomNodeType(User, dump_user, load_user, context)
 
-    context = {
-        'name': {
-            '@id': 'http://example.com/name',
-            '@type': schemaorg.Text.id(),
-        },
-        'email': {
-            '@id': 'http://example.com/email',
-            '@type': schemaorg.Text.id(),
-        },
-        'users': 'http://example.com/users'
-    }
+    jv.node_type(users_node_type.id(), users_node_type)
+    jv.node_type(user_node_type.id(), user_node_type)
+
 
     json = {
         '@type': users_node_type.id(),
