@@ -1,4 +1,4 @@
-Copyright (c) 2014, BowerStatic Developers
+Copyright (c) 2014, JsonValue Developers
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
