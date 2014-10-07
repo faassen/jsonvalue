@@ -6,14 +6,14 @@ Usage
   pass
 
 
-
 Introduction
 ------------
 
-Let's look at what we typically do with Python when handle JSON in Python.
+Let's first look at what we typically do when we handle JSON in
+Python.
 
-We can get ``JSON`` from some source and parse it using the standard
-library ``json`` module:
+When we have ``JSON`` text from some source, we can parse it using the
+standard library ``json`` module:
 
 .. doctest::
 
@@ -34,41 +34,41 @@ the same restrictions, and then use ``json.dumps``:
 
 JsonValue lifts these restrictions. Instead of working with just
 dicts, lists, strings, numbers, booleans and ``None`` you can work
-with other values too, such as dates, datetimes, or any other built-in
-or custom object you choose to use.
+with other values too, such as dates and datetimes. You can even
+represent whole JSON structures (nodes) as a custom Python object.
 
 An example using dates
 ----------------------
 
 Let's see how this works for date objects.
 
-First we create a JsonValue instance. This will help us parse and serialize
-JSON later:
+First we create a JsonValue instance. This is an object that lets us
+transform Python into JSON and back:
 
 .. doctest::
 
   >>> import jsonvalue
   >>> jv = jsonvalue.JsonValue()
 
-Now we tell our ``jv`` it understands basic data types (such as
-``Date``, ``DateTime``, ``Time``, ``URL`` and some others):
+We can give ``jv`` a vocabulary of data types, so that it knows how to
+handle basic data types (such as ``Integer``, ``Date``, ``DateTime``,
+``Time``, ``URL`` and some others):
 
 .. doctest::
 
   >>> from jsonvalue import schemaorg
-  >>> jv.vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
+  >>> jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-These particular data types are defined on http://schema.org/DataType
+These particular data types are defined here: http://schema.org/DataType.
 
-We can now serialize an object with rich date values:
+We can now serialize an object with Python ``date`` values::
 
 .. doctest::
 
   >>> from datetime import date
   >>> from jsonvalue import datatypes
-  >>> from jsonvalue.schemaorg import Date
   >>> jv.dumps({u'my_date': date(2010, 1, 1)},
-  ...          context=datatypes({'my_date': Date}))
+  ...          context=datatypes({'my_date': schemaorg.Date}))
   '{"my_date": "2010-01-01"}'
 
 Note that we need to specify that ``my_date`` is actually a date in
@@ -79,7 +79,7 @@ We can also parse dates when we load JSON:
 
 .. doctest::
 
-  >>> jv.loads('{"my_date": "2010-01-01"}', context=datatypes({'my_date': Date}))
+  >>> jv.loads('{"my_date": "2010-01-01"}', context=datatypes({'my_date': schemaorg.Date}))
   {u'my_date': datetime.date(2010, 1, 1)}
 
 We need to give it the same ``types`` specification as we gave it for
@@ -91,8 +91,7 @@ Custom data types
 
 This shows how it works with dates, but how do you work with a custom
 data type? Imagine we have a custom data type that represents a
-user. This username is represented in JSON ala Twitter using
-``@username``.
+user. The user is represented in JSON ala Twitter using ``@username``.
 
 Our user object looks like this:
 
@@ -106,14 +105,14 @@ This is a very simple user object. In a real program we could plug in
 ``User`` objects that were looked up in a database. The ``User``
 object could also have more fields.
 
-Now let's describe how we represent this user object as JSON:
+We now describe how to represent this user object as JSON:
 
 .. testcode::
 
   def dump_user(user):
       return '@' + user.name
 
-And how we load a user object from JSON:
+We also describe how we load a user object from JSON:
 
 .. testcode::
 
@@ -125,21 +124,21 @@ And how we load a user object from JSON:
 
 Note that we refuse to load any username that does not start with a
 ``@`` and raise a ``ValueError`` if we see one. In a real program
-``load_user`` could do other things, like query the database to get a
-``User`` object.
+``load_user`` could do other things as well, like query the database
+to get a ``User`` object.
 
-We can specify the custom data type::
+In order to plug in these functions we need to specify a custom data type:
 
 .. doctest::
 
   >>> user_datatype = jsonvalue.CustomDataType(User, dump_user, load_user)
 
-We create a ``JsonValue`` object that understands this type:
+We create a ``JsonValue`` object that understands this data type:
 
 .. doctest::
 
   >>> jv = jsonvalue.JsonValue()
-  >>> jv.type(user_datatype.id(), user_datatype)
+  >>> jv.value_type(user_datatype.id(), user_datatype)
 
 Then we can use it for dumping and loading JSON::
 

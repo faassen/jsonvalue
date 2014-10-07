@@ -99,22 +99,22 @@ class JsonValue(object):
 
     # JSON module style API
     def dump(self, obj, *args, **kw):
-        return json.dump(self.from_values(obj, kw.pop('context', None)),
+        return json.dump(self.dump_values(obj, kw.pop('context', None)),
                          *args, **kw)
 
     def dumps(self, obj, *args, **kw):
-        return json.dumps(self.from_values(obj, kw.pop('context', None)),
+        return json.dumps(self.dump_values(obj, kw.pop('context', None)),
                           *args, **kw)
 
     def load(self, *args, **kw):
         context = kw.pop('context', None)
         plain = json.load(*args, **kw)
-        return self.to_values(plain, context)
+        return self.load_values(plain, context)
 
     def loads(self, *args, **kw):
         context = kw.pop('context', None)
         plain = json.loads(*args, **kw)
-        return self.to_values(plain, context)
+        return self.load_values(plain, context)
 
 
 class CustomDataType(object):
