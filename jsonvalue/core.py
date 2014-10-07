@@ -91,9 +91,7 @@ class JsonValue(object):
             'http://jsonvalue.org/main': d,
             '@context': context
         }
-        result = DumpTransformer(
-            self.dump_node, self.can_dump_node, self.dump_value, context)(
-                wrapped)
+        result = DumpTransformer(self, context)(wrapped)
         wrapped_d = jsonld.compact(result, context)
         result = wrapped_d['http://jsonvalue.org/main']
         if isinstance(result, dict) and original_context is not None:
@@ -267,10 +265,8 @@ class LoadTransformer(object):
 
 
 class DumpTransformer(object):
-    def __init__(self, dump_node, can_dump_node, dump_value, context):
-        self.dump_node = dump_node
-        self.can_dump_node = can_dump_node
-        self.dump_value = dump_value
+    def __init__(self, jv, context):
+        self.jv = jv
         self.context = context
 
     def __call__(self, d):
@@ -307,9 +303,9 @@ class DumpTransformer(object):
         return [self.dump(item) for item in l]
 
     def _dump_obj(self, obj):
-        if not self.can_dump_node(obj):
+        if not self.jv.can_dump_node(obj):
             return obj
-        return self.dump(self.dump_node(obj))
+        return self.dump(self.jv.dump_node(obj))
 
     # XXX get rid of it and use _list always?
     def _expanded(self, expanded, errors):
@@ -345,7 +341,7 @@ class DumpTransformer(object):
             return self._dict(d, errors)
         d = d.copy()
         try:
-            d['@value'] = self.dump_value(term, type, value)
+            d['@value'] = self.jv.dump_value(term, type, value)
         except ValueDumpError, e:
             errors.append(e)
         return d
