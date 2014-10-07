@@ -1,6 +1,6 @@
 from pyld import jsonld
 from jsonvalue import JsonValue, valuetypes, CustomDataType, CustomNodeType
-from jsonvalue import schemaorg
+from jsonvalue import schemaorg, error
 from datetime import datetime, date, time
 import pytest
 
@@ -249,10 +249,15 @@ def test_schema_org_data_type_dump_boolean_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(a='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/a'
+    assert errors[0].type == 'http://schema.org/Boolean'
+    assert errors[0].value == 'wrong'
 
 
 def test_schema_org_data_type_dump_number_wrong():
@@ -260,10 +265,15 @@ def test_schema_org_data_type_dump_number_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(b='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/b'
+    assert errors[0].type == 'http://schema.org/Number'
+    assert errors[0].value == 'wrong'
 
 
 def test_schema_org_data_type_dump_float_wrong():
@@ -271,10 +281,15 @@ def test_schema_org_data_type_dump_float_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(c='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/c'
+    assert errors[0].type == 'http://schema.org/Float'
+    assert errors[0].value == 'wrong'
 
 
 def test_schema_org_data_type_dump_integer_wrong():
@@ -282,15 +297,27 @@ def test_schema_org_data_type_dump_integer_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(d='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
-    with pytest.raises(ValueError):
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/d'
+    assert errors[0].type == 'http://schema.org/Integer'
+    assert errors[0].value == 'wrong'
+
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(d=1.1),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/d'
+    assert errors[0].type == 'http://schema.org/Integer'
+    assert errors[0].value == 1.1
 
 
 def test_schema_org_data_type_dump_text_wrong():
@@ -298,10 +325,16 @@ def test_schema_org_data_type_dump_text_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(e=1),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/e'
+    assert errors[0].type == 'http://schema.org/Text'
+    assert errors[0].value == 1
 
 
 def test_schema_org_data_type_dump_url_wrong():
@@ -309,10 +342,16 @@ def test_schema_org_data_type_dump_url_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(f=1),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/f'
+    assert errors[0].type == 'http://schema.org/URL'
+    assert errors[0].value == 1
 
 
 def test_schema_org_data_type_dump_date_wrong():
@@ -320,10 +359,16 @@ def test_schema_org_data_type_dump_date_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(g=datetime(2010, 1, 1)),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/g'
+    assert errors[0].type == 'http://schema.org/Date'
+    assert errors[0].value == datetime(2010, 1, 1)
 
 
 def test_schema_org_data_type_dump_datetime_wrong():
@@ -331,10 +376,16 @@ def test_schema_org_data_type_dump_datetime_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(h=date(2010, 1, 1)),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/h'
+    assert errors[0].type == 'http://schema.org/DateTime'
+    assert errors[0].value == date(2010, 1, 1)
 
 
 def test_schema_org_data_type_dump_time_wrong():
@@ -342,10 +393,16 @@ def test_schema_org_data_type_dump_time_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.DumpError) as e:
         jv.dump_objects(
             dict(i=date(2010, 1, 1)),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/i'
+    assert errors[0].type == 'http://schema.org/Time'
+    assert errors[0].value == date(2010, 1, 1)
 
 
 def test_schema_org_data_type_load_boolean_wrong():
@@ -353,10 +410,16 @@ def test_schema_org_data_type_load_boolean_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(a='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/a'
+    assert errors[0].type == 'http://schema.org/Boolean'
+    assert errors[0].value == 'wrong'
 
 
 def test_schema_org_data_type_load_number_wrong():
@@ -364,10 +427,16 @@ def test_schema_org_data_type_load_number_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(b='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/b'
+    assert errors[0].type == 'http://schema.org/Number'
+    assert errors[0].value == 'wrong'
 
 
 def test_schema_org_data_type_load_float_wrong():
@@ -375,10 +444,16 @@ def test_schema_org_data_type_load_float_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(c='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/c'
+    assert errors[0].type == 'http://schema.org/Float'
+    assert errors[0].value == 'wrong'
 
 
 def test_schema_org_data_type_load_integer_wrong():
@@ -386,15 +461,27 @@ def test_schema_org_data_type_load_integer_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(d='wrong'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
 
-    with pytest.raises(ValueError):
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/d'
+    assert errors[0].type == 'http://schema.org/Integer'
+    assert errors[0].value == 'wrong'
+
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(d=1.1),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/d'
+    assert errors[0].type == 'http://schema.org/Integer'
+    assert errors[0].value == 1.1
 
 
 def test_schema_org_data_type_load_text_wrong():
@@ -402,10 +489,16 @@ def test_schema_org_data_type_load_text_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(e=1),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/e'
+    assert errors[0].type == 'http://schema.org/Text'
+    assert errors[0].value == 1
 
 
 def test_schema_org_data_type_load_url_wrong():
@@ -413,10 +506,16 @@ def test_schema_org_data_type_load_url_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(f=1),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/f'
+    assert errors[0].type == 'http://schema.org/URL'
+    assert errors[0].value == 1
 
 
 def test_schema_org_data_type_load_date_wrong():
@@ -424,10 +523,16 @@ def test_schema_org_data_type_load_date_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(g='2011-14-01'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/g'
+    assert errors[0].type == 'http://schema.org/Date'
+    assert errors[0].value == '2011-14-01'
 
 
 def test_schema_org_data_type_load_datetime_wrong():
@@ -435,10 +540,27 @@ def test_schema_org_data_type_load_datetime_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(h='2011-12-01T00:64:17'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/h'
+    assert errors[0].type == 'http://schema.org/DateTime'
+    assert errors[0].value == '2011-12-01T00:64:17'
+
+    with pytest.raises(error.LoadError) as e:
+        jv.load_objects(
+            dict(h='2011-12-01'),
+            context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/h'
+    assert errors[0].type == 'http://schema.org/DateTime'
+    assert errors[0].value == '2011-12-01'
 
 
 def test_schema_org_data_type_load_time_wrong():
@@ -446,10 +568,17 @@ def test_schema_org_data_type_load_time_wrong():
 
     jv.value_vocabulary(schemaorg.DATA_TYPE_VOCABULARY)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(error.LoadError) as e:
         jv.load_objects(
             dict(i='25:10:17'),
             context=SCHEMA_ORG_DATA_TYPES_CONTEXT)
+
+    errors = e.value.errors
+    assert len(errors) == 1
+    assert errors[0].term == 'http://jsonvalue.org/internal/id/i'
+    assert errors[0].type == 'http://schema.org/Time'
+    assert errors[0].value == '25:10:17'
+
 
 
 def test_node_load_dump_value():

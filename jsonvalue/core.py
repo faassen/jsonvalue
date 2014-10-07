@@ -2,7 +2,8 @@ from pyld import jsonld
 import json
 from types import NoneType
 
-# XXX skip @context dictionary when doing a dump/load
+from .error import ValueLoadError, LoadError, ValueDumpError, DumpError
+
 
 class JsonValue(object):
     def __init__(self):
@@ -22,22 +23,23 @@ class JsonValue(object):
         for iri, type in types.items():
             self.value_type(iri, type)
 
-    def load_value(self, id, value, **kw):
-        t = self._iri_to_value_type.get(id)
+    def load_value(self, term, type, value, **kw):
+        t = self._iri_to_value_type.get(type)
         if t is None or value is None:
             return value
         if not t.validate_load(value, **kw):
-            raise ValueError("Cannot load value as %s: %r" %
-                             (id, value))
-        return t.load(value, **kw)
+            raise ValueLoadError(term, type, value)
+        try:
+            return t.load(value, **kw)
+        except ValueError:
+            raise ValueLoadError(term, type, value)
 
-    def dump_value(self, id, value, **kw):
-        t = self._iri_to_value_type.get(id)
+    def dump_value(self, term, type, value, **kw):
+        t = self._iri_to_value_type.get(type)
         if t is None or value is None:
             return value
         if not t.validate_dump(value):
-            raise ValueError("Cannot dump value as %s: %r" %
-                             (id, value))
+            raise ValueDumpError(term, type, value)
         return t.dump(value, **kw)
 
     def can_load_node(self, id, **kw):
@@ -170,6 +172,12 @@ def valuetypes(d):
     return context
 
 
+class LoadInfo(object):
+    def __init__(self):
+        self.objects = {}
+        self.errors = []
+
+
 class LoadTransformer(object):
     def __init__(self, load_node, can_load_node, load_value, context):
         self.load_node = load_node
@@ -178,10 +186,12 @@ class LoadTransformer(object):
         self.context = context
 
     def __call__(self, expanded):
-        objects = {}
-        objectified = self._list(expanded, objects)
+        load_info = LoadInfo()
+        objectified = self._list('_', expanded, load_info)
+        if load_info.errors:
+            raise LoadError(load_info.errors)
         compacted = jsonld.compact(objectified, self.context)
-        return self.realize(compacted, objects)
+        return self.realize(compacted, load_info.objects)
 
     def realize(self, o, objects):
         if isinstance(o, dict):
@@ -204,39 +214,36 @@ class LoadTransformer(object):
     def _realize_list(self, l, objects):
         return [self.realize(value, objects) for value in l]
 
-    def _expanded(self, expanded, objects):
-        result = []
-        for d in expanded:
-            result.append(self._dict(d, objects))
-        return result
-
-    def _dict(self, d, objects):
+    def _dict(self, d, info):
         result = {}
-        for key, l in d.items():
+        for term, l in d.items():
             if not isinstance(l, list):
-                result[key] = l
+                result[term] = l
                 continue
-            result[key] = self._list(l, objects)
+            result[term] = self._list(term, l, info)
         return result
 
-    def _list(self, l, objects):
+    def _list(self, term, l, info):
         result = []
         for d in l:
             if not isinstance(d, dict):
                 result.append(d)
                 continue
-            result.append(self._value(d, objects))
+            result.append(self._value(term, d, info))
         return result
 
-    def _value(self, d, objects):
-        d = self._dict(d, objects)
+    def _value(self, term, d, info):
+        d = self._dict(d, info)
         type = d.get('@type')
         if type is None:
             return d
         value = d.get('@value')
         if value is not None:
             d = d.copy()
-            d['@value'] = self.load_value(type, value)
+            try:
+                d['@value'] = self.load_value(term, type, value)
+            except ValueLoadError, e:
+                info.errors.append(e)
             return d
         # XXX what if there are more than one node types?
         type = type[0]
@@ -244,12 +251,12 @@ class LoadTransformer(object):
             return d
         compacted = jsonld.compact(d, self.context)
         del compacted['@context']
-        compacted = self.realize(compacted, objects)
+        compacted = self.realize(compacted, info.objects)
         obj = self.load_node(type, compacted)
         if obj is None:
             return d
-        new_id = 'http://jsonvalue.org/object/%s' % len(objects)
-        objects[new_id] = obj
+        new_id = 'http://jsonvalue.org/object/%s' % len(info.objects)
+        info.objects[new_id] = obj
         return {
             '@type': 'http://jsonvalue.org/object_type',
             '@value': new_id,
@@ -266,7 +273,11 @@ class DumpTransformer(object):
     def __call__(self, d):
         d = self.dump(d)
         expanded = jsonld.expand(d, dict(expandContext=self.context))
-        return self._expanded(expanded)
+        errors = []
+        result = self._expanded(expanded, errors)
+        if errors:
+            raise DumpError(errors)
+        return result
 
     def dump(self, d):
         if isinstance(d, dict):
@@ -295,37 +306,41 @@ class DumpTransformer(object):
             return obj
         return self.dump(self.dump_node(obj))
 
-    def _expanded(self, expanded):
+    # XXX get rid of it and use _list always?
+    def _expanded(self, expanded, errors):
         result = []
         for d in expanded:
-            result.append(self._dict(d))
+            result.append(self._dict(d, errors))
         return result
 
-    def _dict(self, d):
+    def _dict(self, d, errors):
         result = {}
-        for key, l in d.items():
+        for term, l in d.items():
             if not isinstance(l, list):
-                result[key] = l
+                result[term] = l
                 continue
-            result[key] = self._list(l)
+            result[term] = self._list(term, l, errors)
         return result
 
-    def _list(self, l):
+    def _list(self, term, l, errors):
         result = []
         for d in l:
             if not isinstance(d, dict):
                 result.append(d)
                 continue
-            result.append(self._value(d))
+            result.append(self._value(term, d, errors))
         return result
 
-    def _value(self, d):
+    def _value(self, term, d, errors):
         type = d.get('@type')
         if type is None:
-            return self._dict(d)
+            return self._dict(d, errors)
         value = d.get('@value')
         if value is None:
-            return self._dict(d)
+            return self._dict(d, errors)
         d = d.copy()
-        d['@value'] = self.dump_value(type, value)
+        try:
+            d['@value'] = self.dump_value(term, type, value)
+        except ValueDumpError, e:
+            errors.append(e)
         return d
