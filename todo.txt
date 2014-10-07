@@ -1,1 +1,6 @@
 * internal per-data type context versus user-supplied context.
+
+* describe exceptions that can happen.
+
+* morepath integration.
+
