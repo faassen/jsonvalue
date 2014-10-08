@@ -1,8 +1,22 @@
 context
 -------
 
-* do we also need a dump per node type context to do expansion? Answer:
-  since we supply the context ourselves, probably not.
+JsonValue loading:
+
+* accepts any context for input.
+
+* convert input to easy to use Python values.
+
+JsonValue is for conversion, not validation. It rejects bad input --
+input where the types don't match the values, or where types cannot be
+interpreted. It doesn't do validation. Validation should be done using
+JSON-Schema, or expand and explicit type check, or go to Python
+objects and validate them, or a combination of such.
+
+document loader
+---------------
+
+* dealing with loading docs from URLs.
 
 extra parameters
 ----------------
