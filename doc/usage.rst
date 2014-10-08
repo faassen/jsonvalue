@@ -132,7 +132,7 @@ In order to plug in these functions we need to specify a custom data type:
 
 .. doctest::
 
-  >>> user_datatype = jsonvalue.CustomDataType(User, dump_user, load_user)
+  >>> user_datatype = jsonvalue.CustomValueType(User, dump_user, load_user)
 
 We create a ``JsonValue`` object that understands this data type:
 

@@ -1,5 +1,4 @@
-from jsonvalue import JsonValue, valuetypes, CustomNodeType
-# XXX add test for CustomDataType
+from jsonvalue import JsonValue, valuetypes, CustomNodeType, CustomValueType
 from jsonvalue import schemaorg, error
 from datetime import datetime, date, time
 import pytest
@@ -677,13 +676,13 @@ def test_node_load_dump_value():
             self.name = name
             self.email = email
 
-    def dump_user(user):
+    def dump_user(user, extra):
         return {
             'name': user.name,
             'email': user.email
         }
 
-    def load_user(d):
+    def load_user(d, extra):
         return User(d['name'], d['email'])
 
     context = {
@@ -728,13 +727,13 @@ def test_outer_node_to_value():
             self.name = name
             self.email = email
 
-    def dump_user(user):
+    def dump_user(user, extra):
         return {
             'name': user.name,
             'email': user.email
         }
 
-    def load_user(d):
+    def load_user(d, extra):
         return User(d['name'], d['email'])
 
     context = {
@@ -787,12 +786,12 @@ def test_nested_node_values():
         def __init__(self, users):
             self.users = users
 
-    def dump_users(users):
+    def dump_users(users, extra):
         return {
             'users': users.users
         }
 
-    def load_users(d):
+    def load_users(d, extra):
         return Users(d['users'])
 
     users_node_type = CustomNodeType(Users, dump_users, load_users, context)
@@ -802,13 +801,13 @@ def test_nested_node_values():
             self.name = name
             self.email = email
 
-    def dump_user(user):
+    def dump_user(user, extra):
         return {
             'name': user.name,
             'email': user.email
         }
 
-    def load_user(d):
+    def load_user(d, extra):
         return User(d['name'], d['email'])
 
     user_node_type = CustomNodeType(User, dump_user, load_user, context)
@@ -923,3 +922,52 @@ def test_missing_value_type():
     assert errors[0].term == 'http://example.com/foo'
     assert errors[0].type is None
     assert errors[0].value == '2010-01-01'
+
+
+def test_extra_parameters():
+    d = {
+        '@context': {
+            'foo': {
+                '@id': 'http://example.com/foo',
+                '@type': 'http://example.com/x'
+            },
+            'bar': {
+                '@id': 'http://example.com/bar',
+                '@type': 'http://example.com/date',
+            }
+        },
+        'foo': 'something',
+        'bar': '2010-01-01'
+    }
+
+    info = JsonValue()
+
+    class X(object):
+        def __init__(self, value, request):
+            self.value = value
+            self.request = request
+
+    def dump_x(x, request):
+        return x.value + '(%s)' % request
+
+    def load_x(o, request):
+        return X(o, request)
+
+    t = CustomValueType(X, dump_x, load_x)
+
+    info.value_type('http://example.com/x', t)
+    info.value_type('http://example.com/date', schemaorg.Date)
+
+    request = 'my request'
+
+    values = info.load_objects(d, d['@context'], extra=request)
+
+    assert values['foo'].value == 'something'
+    assert values['foo'].request == 'my request'
+    assert values['bar'] == date(2010, 1, 1)
+
+    json_out = info.dump_objects(values, d['@context'], extra=request)
+    expected = d.copy()
+    expected['foo'] = 'something(my request)'
+    assert json_out == expected
+

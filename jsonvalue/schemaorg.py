@@ -8,19 +8,19 @@ class SchemaOrgType(object):
         return 'http://schema.org/%s' % cls.__name__
 
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return True
 
     @staticmethod
-    def validate_dump(value):
+    def validate_dump(value, extra):
         return True
 
     @staticmethod
-    def load(value):
+    def load(value, extra):
         return value
 
     @staticmethod
-    def dump(value):
+    def dump(value, extra):
         return value
 
 
@@ -30,7 +30,7 @@ class DataType(SchemaOrgType):
 
 class Boolean(DataType):
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, bool)
 
     validate_dump = validate_load
@@ -38,7 +38,7 @@ class Boolean(DataType):
 
 class Number(DataType):
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, int) or isinstance(value, float)
 
     validate_dump = validate_load
@@ -46,13 +46,13 @@ class Number(DataType):
 
 class Float(Number):
     @staticmethod
-    def load(value):
+    def load(value, extra):
         return float(value)
 
 
 class Integer(Number):
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, int)
 
     validate_dump = validate_load
@@ -60,7 +60,7 @@ class Integer(Number):
 
 class Text(DataType):
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, basestring)
 
     validate_dump = validate_load
@@ -73,19 +73,19 @@ class URL(Text):
 
 class Date(DataType):
     @staticmethod
-    def load(value):
+    def load(value, extra):
         return isodate.parse_date(value)
 
     @staticmethod
-    def dump(value):
+    def dump(value, extra):
         return isodate.date_isoformat(value)
 
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, basestring)
 
     @staticmethod
-    def validate_dump(value):
+    def validate_dump(value, extra):
         # we have to specify we do not accept datetimes as dates here
         # better fail early in that case
         return isinstance(value, date) and not isinstance(value, datetime)
@@ -93,37 +93,37 @@ class Date(DataType):
 
 class DateTime(DataType):
     @staticmethod
-    def load(value):
+    def load(value, extra):
         return isodate.parse_datetime(value)
 
     @staticmethod
-    def dump(value):
+    def dump(value, extra):
         return isodate.datetime_isoformat(value)
 
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, basestring)
 
     @staticmethod
-    def validate_dump(value):
+    def validate_dump(value, extra):
         return isinstance(value, datetime)
 
 
 class Time(DataType):
     @staticmethod
-    def load(value):
+    def load(value, extra):
         return isodate.parse_time(value)
 
     @staticmethod
-    def dump(value):
+    def dump(value, extra):
         return isodate.time_isoformat(value)
 
     @staticmethod
-    def validate_load(value):
+    def validate_load(value, extra):
         return isinstance(value, basestring)
 
     @staticmethod
-    def validate_dump(value):
+    def validate_dump(value, extra):
         return isinstance(value, time)
 
 
