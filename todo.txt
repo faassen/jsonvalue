@@ -13,6 +13,21 @@ interpreted. It doesn't do validation. Validation should be done using
 JSON-Schema, or expand and explicit type check, or go to Python
 objects and validate them, or a combination of such.
 
+Validation strategy
+-------------------
+
+* you can specify per type what terms it needs. writable and readable. If
+  writable term is missing, then validation error. What then about not-required
+  values?
+
+* a type can also specify it wants a single value of something (not a
+  multiple), or that it requires a multiple (in which case you'll get
+  a list or set).
+
+* what about node types of sub-nodes?
+
+* A request method sets what type (or Python class) it wants.
+
 document loader
 ---------------
 
