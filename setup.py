@@ -12,7 +12,7 @@ tests_require = [
 
 setup(
     name='jsonvalue',
-    version='0.1.dev0',
+    version='0.1',
     description="Rich values for JSON",
     long_description=long_description,
     author="Martijn Faassen",
