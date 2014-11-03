@@ -110,14 +110,14 @@ We now describe how to represent this user object as JSON:
 
 .. testcode::
 
-  def dump_user(user):
+  def dump_user(user, extra):
       return '@' + user.name
 
 We also describe how we load a user object from JSON:
 
 .. testcode::
 
-  def load_user(o):
+  def load_user(o, extra):
      if not o.startswith('@'):
          raise ValueError(
              "User representation did not start with @: %s" % o)
