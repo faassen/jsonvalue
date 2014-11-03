@@ -16,9 +16,9 @@ objects and validate them, or a combination of such.
 Validation strategy
 -------------------
 
-* you can specify per type what terms it needs. writable and readable. If
-  writable term is missing, then validation error. What then about not-required
-  values?
+* you can specify per type what terms it needs. writable and
+  readable. If writable term is missing, then validation error. What
+  then about not-required values?
 
 * a type can also specify it wants a single value of something (not a
   multiple), or that it requires a multiple (in which case you'll get
